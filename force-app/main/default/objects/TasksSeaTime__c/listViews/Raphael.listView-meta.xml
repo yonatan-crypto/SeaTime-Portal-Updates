@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Raphael</fullName>
+    <columns>NAME</columns>
+    <columns>Description__c</columns>
+    <columns>DateToComplete__c</columns>
+    <columns>NextFollowDate__c</columns>
+    <columns>status__c</columns>
+    <columns>Urgency__c</columns>
+    <filterScope>Mine</filterScope>
+    <filters>
+        <field>AssignedTo__c</field>
+        <operation>equals</operation>
+        <value>רפי רוזנבאום</value>
+    </filters>
+    <filters>
+        <field>status__c</field>
+        <operation>notEqual</operation>
+        <value>הסתיים</value>
+    </filters>
+    <filters>
+        <field>NextFollowDate__c</field>
+        <operation>lessOrEqual</operation>
+        <value>TODAY</value>
+    </filters>
+    <label>רפי</label>
+</ListView>

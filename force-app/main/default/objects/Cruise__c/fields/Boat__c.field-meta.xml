@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Boat__c</fullName>
+    <deleteConstraint>Restrict</deleteConstraint>
+    <label>סירה</label>
+    <referenceTo>Boats__c</referenceTo>
+    <relationshipLabel>הפלגות</relationshipLabel>
+    <relationshipName>Boat</relationshipName>
+    <required>true</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

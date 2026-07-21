@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>type_of_enriching__c</fullName>
+    <label>סוג מודרכת</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>בית ספר</fullName>
+                <default>false</default>
+                <label>בית ספר</label>
+            </value>
+            <value>
+                <fullName>מועדון</fullName>
+                <default>false</default>
+                <label>מועדון</label>
+            </value>
+            <value>
+                <fullName>תאוריה</fullName>
+                <default>false</default>
+                <label>תאוריה</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

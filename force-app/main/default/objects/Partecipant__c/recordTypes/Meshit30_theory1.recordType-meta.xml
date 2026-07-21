@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RecordType xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Meshit30_theory1</fullName>
+    <active>true</active>
+    <label>משיט 30 עיוני</label>
+    <picklistValues>
+        <picklist>learning_method__c</picklist>
+        <values>
+            <fullName>בכיתה</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>לימוד עצמי</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>קבוצה פרטית</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>pass_OR_fail__c</picklist>
+        <values>
+            <fullName>נכשל</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>עבר</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+</RecordType>

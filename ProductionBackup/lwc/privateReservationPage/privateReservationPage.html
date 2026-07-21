@@ -1,0 +1,172 @@
+<!--
+  @description       : 
+  @author            : ChangeMeIn@UserSettingsUnder.SFDoc
+  @group             : 
+  @last modified on  : 11-15-2024
+  @last modified by  : ChangeMeIn@UserSettingsUnder.SFDoc
+-->
+<template>
+    <section class={mainSectionSelector}>
+
+        <template lwc:if={showSpinner}>
+            <lightning-spinner alternative-text="Loading" variant="brand">
+            </lightning-spinner>
+            <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+        </template>
+
+        <template lwc:if={showBookBoatModal}>
+            <c-book-private-boat-modal selected-boat={selectedBoat} onclose={handleShowBookModal} 
+            boat-reserved={boatReserved} onapprove={handleApprovePrivateReservation}></c-book-private-boat-modal>
+        </template>
+
+        <section class="center-align-section">
+            <header class="private-reservation-header">
+                <div>
+                    <template lwc:if={showAddNewReservationButton}>
+                        <button class="custom-button slds-button" onclick={handleNavigateToPrivateReservation}>
+                            {addNewReservation}
+                        </button>
+                    </template>
+                </div>
+
+                <div class="private-reservation-sub-header">
+                    <p class={headerSelector}>
+                        {pageHeader}
+                    </p>
+                </div>
+            </header>
+        </section>
+
+        <section class="add-new-reservation">
+            <template lwc:if={showRecentReservations}>
+                <section class="search-result">
+                    <section class="header-tile">
+                        <p class="next-reservation-label" lwc:if={showSearchSection}>{nextReservationLabel}</p>
+                    </section>
+                    <template lwc:if={showSearchSection} for:each={privateReservationArray} for:item="cruise">
+                        <section key={cruise.Id} class="tile">
+                            <div class="center-align-section-item">
+                                <p></p>
+                                <p>
+                                    {cruise.startDateToDisplay}
+                                    <!--   <lightning-formatted-date-time value={cruise.startDate} year="2-digit"
+                                        month="2-digit" day="2-digit" time-zone="UTC"
+                                        hour12={show12HourTime}></lightning-formatted-date-time> -->
+                                </p>
+                            </div>
+                            <div class="center-align-section-item">
+                                <p>{cruise.boatType}</p>
+                                <p>{cruise.boatName}</p>
+                            </div>
+                            <div class="center-align-section-item">
+                                <p>
+                                    <lightning-formatted-date-time value={cruise.endTime} hour="numeric"
+                                        minute="2-digit" hour12={show12HourTime}
+                                        time-zone="asia/jerusalem"></lightning-formatted-date-time>
+                                </p>
+                                <p>
+                                    <lightning-formatted-date-time value={cruise.startDate} hour="2-digit"
+                                        minute="2-digit" hour12={show12HourTime}
+                                        time-zone="asia/jerusalem"></lightning-formatted-date-time>
+                                </p>
+                            </div>
+                        </section>
+                    </template>
+                    <c-sea-time-subscriptions if:false={showSearchSection} render-wire={renderWire}
+                        account-id={accountId} display-subscription=true></c-sea-time-subscriptions>
+
+                </section>
+            </template>
+            <template lwc:else>
+                <section class="search-result">
+                    <section class="tile">
+                        <template if:true={boatsArray.length} iterator:boat={boatsArray}>
+                            <div key={boat.value.id}>
+                                <p class="start-time">
+                                    {boat.value.startTime}
+                                </p>
+                                <div class="boat-container" dir="rtl">
+                                    <template for:each={boat.value.listOfBoats} for:item="boatData">
+                                        <section key={boatData.id} class="boat-tile" data-name={boatData.name}
+                                            data-start-time={boat.value.startTime} data-end-time={boat.value.endTime}
+                                            data-boat-id={boatData.id} data-boat-type={boatData.type}
+                                            data-isdisable={boatData.isCertificateRequired}
+                                            onclick={handleShowBookModal}>
+                                            <img src={boatData.boatImage} class={boatData.boatImgSelector}
+                                                style="max-height: 9rem;">
+                                            <div class="boat-property">
+                                                <p>{boatData.name}</p>
+                                                <p>{boatData.type}</p>
+                                            </div>
+                                        </section>
+                                    </template>
+                                </div>
+                            </div>
+                        </template>
+                        <template if:false={boatsArray.length}>
+                            <span class="noRecordsStyle slds-align_absolute-center" style="color: red;">No boats
+                                available </span>
+                        </template>
+                    </section>
+                </section>
+            </template>
+
+            <section class="search-section" lwc:if={showSearchSection}>
+                <div class={fixedSearchSectionSelector}>
+                    <p class="error-verbiage" lwc:if={showInvalidDateVerbiage}>{invalidDateVerbiage}</p>
+                    <lightning-input label="Select Date" variant="label-hidden" class="date-format-hide" type="date"
+                    dir={boatDateDir} value={searchData.date} onchange={handleSearchDateChange}>
+                    </lightning-input>
+
+                    <section class="days-container">
+                        <lightning-button-icon icon-name="utility:chevronleft" variant="bare"
+                            class="slds-p-bottom_medium" onclick={handleSubtractOneWeekToSearchDate}>
+                        </lightning-button-icon>
+                        <div class="displayflex" dir={boatTileDir}>
+                            <template for:each={daysArray} for:item="day" >
+                                <div key={day.label} data-id={day.value} data-index={day.index} onclick={handleSelectedDay}>
+                                    <div class={day.selector}>
+                                        {day.label}
+                                        <div>{day.day} </div>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                      
+                        <lightning-button-icon icon-name="utility:chevronright" variant="bare"
+                            class="slds-p-bottom_medium" onclick={handleAddOneWeekToSearchDate}>
+                        </lightning-button-icon>
+                    </section>
+
+                    <p class="right-align-text">{boatType}</p>
+                    <section class="search-button-container">
+                        <template for:each={boatTypesArray} for:item="boatType">
+                            <button key={boatType.label} data-id={boatType.label} class={boatType.selector}
+                                onclick={handleBoatTypeSelected}>
+                                {boatType.label}
+                            </button>
+                        </template>
+                    </section>
+
+                    <p class="right-align-text">{duration}</p>
+                    <section class="search-button-container">
+                        <button style="visibility: hidden;">
+                            Dummy button
+                        </button>
+                        <template for:each={boatDurationArray} for:item="boatDuration">
+                            <button key={boatDuration.label} data-id={boatDuration.label} class={boatDuration.selector}
+                                onclick={handleBoatDurationSelected} dir={dir}>
+                                {boatDuration.label}
+                            </button>
+                        </template>
+                    </section>
+                    <br />
+
+                    <lightning-button label={submit} class="moderate-button" stretch variant="brand"
+                        disabled={disableSearchButton} onclick={handleSubmit}>
+                    </lightning-button>
+                </div>
+            </section>
+        </section>
+    </section>
+</template>

@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>yacht_model__c</fullName>
+    <label>דגם יאכטה</label>
+    <required>true</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Beneteau</fullName>
+                <default>false</default>
+                <label>Beneteau</label>
+            </value>
+            <value>
+                <fullName>Jeanneau</fullName>
+                <default>false</default>
+                <label>Jeanneau</label>
+            </value>
+            <value>
+                <fullName>Bavaria</fullName>
+                <default>false</default>
+                <label>Bavaria</label>
+            </value>
+            <value>
+                <fullName>Dufour</fullName>
+                <default>false</default>
+                <label>Dufour</label>
+            </value>
+            <value>
+                <fullName>Hanse</fullName>
+                <default>false</default>
+                <label>Hanse</label>
+            </value>
+            <value>
+                <fullName>Lagoon</fullName>
+                <default>false</default>
+                <label>Lagoon</label>
+            </value>
+            <value>
+                <fullName>Bali</fullName>
+                <default>false</default>
+                <label>Bali</label>
+            </value>
+            <value>
+                <fullName>Fountaine-Pajot</fullName>
+                <default>false</default>
+                <label>Fountaine-Pajot</label>
+            </value>
+            <value>
+                <fullName>Moorings (Leopard)</fullName>
+                <default>false</default>
+                <label>Moorings (Leopard)</label>
+            </value>
+            <value>
+                <fullName>-Moorings (Lagoon)</fullName>
+                <default>false</default>
+                <label>-Moorings (Lagoon)</label>
+            </value>
+            <value>
+                <fullName>-Sunsail (Leopard)</fullName>
+                <default>false</default>
+                <label>-Sunsail (Leopard)</label>
+            </value>
+            <value>
+                <fullName>-Sunsail (Lagoon)</fullName>
+                <default>false</default>
+                <label>-Sunsail (Lagoon)</label>
+            </value>
+            <value>
+                <fullName>Nautitech</fullName>
+                <default>false</default>
+                <label>Nautitech</label>
+            </value>
+            <value>
+                <fullName>Elan</fullName>
+                <default>false</default>
+                <label>Elan</label>
+            </value>
+            <value>
+                <fullName>Excess</fullName>
+                <default>false</default>
+                <label>Excess</label>
+            </value>
+            <value>
+                <fullName>Sunsail</fullName>
+                <default>false</default>
+                <label>Sunsail</label>
+            </value>
+            <value>
+                <fullName>Moorings</fullName>
+                <default>false</default>
+                <label>Moorings</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

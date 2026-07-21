@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>View</fullName>
+    <columns>NAME</columns>
+    <columns>Account_Name__c</columns>
+    <columns>Type__c</columns>
+    <columns>Start_Date__c</columns>
+    <columns>End_Date__c</columns>
+    <columns>weekday__c</columns>
+    <columns>weekend__c</columns>
+    <columns>Total_Used_Hours__c</columns>
+    <columns>Remaining_hours__c</columns>
+    <filterScope>Everything</filterScope>
+    <label>קלאסי</label>
+    <language>en_US</language>
+</ListView>

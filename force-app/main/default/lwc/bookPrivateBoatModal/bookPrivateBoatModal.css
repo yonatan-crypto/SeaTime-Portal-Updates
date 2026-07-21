@@ -1,0 +1,49 @@
+@import "c/homePageStyleSheet";
+@import "c/customModalStyle";
+
+.container-section {
+    width: 19rem !important;
+    padding: 1rem;
+}
+
+.footer-section {
+    display: flex;
+}
+
+.boat-details {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+}
+
+.headers p {
+    font-weight: 600;
+    direction: rtl;
+    margin-left: .5rem;
+}
+
+.header {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+}
+
+.boat-detail-values p {
+    direction: rtl;
+    margin-right: .5rem;
+}
+
+.boat-certificate-required {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 1rem 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.booking-confirmation-verbiage {
+    font-size: 1.1rem;
+    font-weight: 600;
+    padding-bottom: 1rem;
+}

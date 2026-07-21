@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>this_year_or_next_year</fullName>
+    <active>true</active>
+    <errorConditionFormula>Year__c &gt;  YEAR( TODAY() ) +1 || Year__c &lt; YEAR( TODAY() ) -1</errorConditionFormula>
+    <errorDisplayField>Year__c</errorDisplayField>
+    <errorMessage>שנה יכולה להיות נוכחית, קודמת לתיקון נתונים או הבאה לתכנון</errorMessage>
+</ValidationRule>

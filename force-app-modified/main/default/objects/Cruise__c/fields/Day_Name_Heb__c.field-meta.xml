@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Day_Name_Heb__c</fullName>
+    <externalId>false</externalId>
+    <formula>CASE(
+  WEEKDAY( saildate__c ),
+  1, &quot;ראשון&quot;,
+  2, &quot;שני&quot;,
+  3, &quot;שלישי&quot;,
+  4, &quot;רביעי&quot;,
+  5, &quot;חמישי&quot;,
+  6, &quot;שישי&quot;,
+  7, &quot;שבת&quot;,
+  &quot;&quot;
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>יום ההפלגה בעברית</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

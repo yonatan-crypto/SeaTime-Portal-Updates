@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ListView xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>maulfunctions</fullName>
+    <columns>NAME</columns>
+    <columns>urgency__c</columns>
+    <columns>yacht_malfunction__c</columns>
+    <columns>reporter__c</columns>
+    <columns>malfunction_status__c</columns>
+    <columns>report_date__c</columns>
+    <columns>mal_description__c</columns>
+    <filterScope>Mine</filterScope>
+    <filters>
+        <field>malfunction_status__c</field>
+        <operation>notEqual</operation>
+        <value>הסתיים</value>
+    </filters>
+    <label>תקלות לפי סדר</label>
+</ListView>

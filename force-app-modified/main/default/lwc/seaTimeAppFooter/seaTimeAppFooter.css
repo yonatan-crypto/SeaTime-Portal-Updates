@@ -1,0 +1,43 @@
+@import "c/seaTimeAppStyleSheet";
+
+footer {
+    display: flex;
+    justify-content: space-between;
+    background-color: var(--app-theme-color-light);
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: .5rem;
+    font-weight: 300;
+    z-index: 11;
+}
+
+section p {
+    font-weight: 500;
+}
+
+/* Mobile-specific fix for footer overlapping */
+@media screen and (max-width: 768px) {
+    footer {
+        flex-direction: column;
+        align-items: flex-end;
+        padding: 1rem 0.5rem;
+        gap: 0.75rem;
+    }
+
+    footer section {
+        width: 100%;
+        padding: 0;
+    }
+
+    footer section p {
+        margin: 0.5rem 0 !important;
+        padding: 0.25rem 0 !important;
+        line-height: 1.6 !important;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        display: block;
+        clear: both;
+    }
+}

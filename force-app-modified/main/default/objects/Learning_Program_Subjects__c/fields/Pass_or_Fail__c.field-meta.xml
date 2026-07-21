@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Pass_or_Fail__c</fullName>
+    <label>Pass or Fail</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>עבר</fullName>
+                <default>false</default>
+                <label>עבר</label>
+            </value>
+            <value>
+                <fullName>נכשל</fullName>
+                <default>false</default>
+                <label>נכשל</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

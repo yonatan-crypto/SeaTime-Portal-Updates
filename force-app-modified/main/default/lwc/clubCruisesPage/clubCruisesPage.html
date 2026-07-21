@@ -1,0 +1,90 @@
+<template>
+    <section class={mainSectionSelector}>
+
+        <template lwc:if={showSpinner}>
+            <lightning-spinner alternative-text="Loading" variant="brand">
+            </lightning-spinner>
+            <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+        </template>
+
+        <template lwc:if={showBookCruiseModal}>
+            <c-book-club-cruise-modal selected-cruise={selectedCruise} onclose={handleShowBookModal}
+                onconfirm={handleConfirmBooking}>
+            </c-book-club-cruise-modal>
+        </template>
+
+        <section class="center-align-section">
+            <header class="private-reservation-header">
+                <div>
+                    <template lwc:if={showAddNewReservationButton}>
+                        <button class="custom-button slds-button" onclick={handleAddNewClubCruises}>
+                            {newClubCruises}
+                        </button>
+                    </template>
+                </div>
+            </header>
+        </section>
+
+        <section class="add-new-reservation">
+            <!-- Filter Section at Top -->
+            <section class="search-section filter-top-section" lwc:if={showSearchSection}>
+                <div class={fixedSearchSectionSelector} dir="rtl">
+                    <p class="filter-title">סינון לפי סוג הפלגה:</p>
+                    <div class="checkbox-filters">
+                        <lightning-input type="checkbox" label="מועדון" checked={filterClub} onchange={handleFilterChange} data-id="club" class="teal-checkbox"></lightning-input>
+                        <lightning-input type="checkbox" label="בית ספר" checked={filterSchool} onchange={handleFilterChange} data-id="school" class="teal-checkbox"></lightning-input>
+                        <lightning-input type="checkbox" label="תאוריה" checked={filterTheory} onchange={handleFilterChange} data-id="theory" class="teal-checkbox"></lightning-input>
+                        <lightning-input type="checkbox" label="הסמכה" checked={filterCert} onchange={handleFilterChange} data-id="cert" class="teal-checkbox"></lightning-input>
+
+                    </div>
+                </div>
+            </section>
+
+            <template lwc:if={showRecentReservations}>
+                <section class="search-result">
+                    <c-sea-time-subscriptions if:false={showSearchSection} render-wire={renderWire}
+                        account-id={account.Id} is-club=true display-subscription=true></c-sea-time-subscriptions>
+                </section>
+            </template>
+            <template lwc:else>
+                <section class="search-result">
+                    <section class="tile">
+                        <template lwc:if={showSelectedClubCruises}>
+                            <div class="unified-list">
+                                <template for:each={selectedClubCruisesArray} for:item="cruise">
+                                    <div key={cruise.id} class="order-item-card slds-box slds-m-bottom_small">
+                                        <div class="order-row" dir="rtl">
+                                            <div class="order-col date">{cruise.startDateToDisplay}</div>
+                                            <div class="order-col time">
+                                                <span dir="ltr">{cruise.formattedStartTime} - {cruise.formattedEndime}</span>
+                                            </div>
+                                            <div class="order-col boat">{cruise.boatName}</div>
+                                            <div class="order-col info">{cruise.addtionalInfo}</div>
+                                            <div class="order-col seats">
+                                                <div class="seats-badge">
+                                                    <span>{cruise.remainingSlots}</span>
+                                                    <span>{slotsLeft}</span>
+                                                </div>
+                                            </div>
+                                            <div class="order-col actions">
+                                                <button class="slds-button slds-button_brand moderate-button"
+                                                    disabled={cruise.isJoinDisabled} data-id={cruise.id}
+                                                    onclick={handleShowBookModal}>
+                                                    {cruise.bookingButtonLabel}
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                        <template lwc:else>
+                            <p class="no-record-found">{noCruiseAvailable}</p>
+                        </template>
+                    </section>
+                </section>
+            </template>
+        </section>
+    </section>
+</template>

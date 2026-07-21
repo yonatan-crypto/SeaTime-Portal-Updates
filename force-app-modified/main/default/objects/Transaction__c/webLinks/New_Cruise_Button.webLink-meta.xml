@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<WebLink xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>New_Cruise_Button</fullName>
+    <availability>online</availability>
+    <displayType>button</displayType>
+    <encodingKey>UTF-8</encodingKey>
+    <linkType>url</linkType>
+    <masterLabel>הפלגה חדשה</masterLabel>
+    <openType>replace</openType>
+    <protected>false</protected>
+    <url>/a04/e?retURL=/{!Transaction__c.Id}&amp;RecordType=0120Y00000073Ap&amp;ent=01I0Y000002Fqp8
+&amp;CF00N0Y00000R49iq={!Transaction__c.Name}&amp;CF00N0Y00000R49iq_lkid={!Transaction__c.Id}&amp;CF00N0Y00000R49jR={!Transaction__c.Account_Name__c}&amp;CF00N0Y00000R49jR_lkid={!Transaction__c.Account_NameId__c}</url>
+</WebLink>

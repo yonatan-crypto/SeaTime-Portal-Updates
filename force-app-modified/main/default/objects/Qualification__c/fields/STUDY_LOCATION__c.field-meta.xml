@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>STUDY_LOCATION__c</fullName>
+    <label>מקום לימודים</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>חיפה</fullName>
+                <default>false</default>
+                <label>חיפה</label>
+            </value>
+            <value>
+                <fullName>הרצליה</fullName>
+                <default>false</default>
+                <label>הרצליה</label>
+            </value>
+            <value>
+                <fullName>תל אביב</fullName>
+                <default>false</default>
+                <label>תל אביב</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

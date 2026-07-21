@@ -1,0 +1,300 @@
+<template>
+
+    <!--start For Welcome overlay component-->
+    <template lwc:if={showWelcomeOverlay}>
+        <c-welcome-home-overlay onclose={handleCloseOverlay}></c-welcome-home-overlay>
+    </template>
+    <!--End Welcome overlay component-->
+
+
+    <template lwc:if={showSpinner}>
+        <lightning-spinner alternative-text="Loading" variant="brand">
+        </lightning-spinner>
+        <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
+    </template>
+
+    <div class="home-page-style">
+    
+
+
+
+    
+    <template lwc:if={isLoggedIn}>
+        <section style={backgroundStyle}></section>
+        <section class="main-section">
+            <template lwc:if={navigationItem.renderDashboard}>
+                <div class="dashboard-container">
+                    <div class="dashboard-buttons">
+                        <button class={privateBookingButtonClass} onclick={handleDashboardBookPrivate} id="book-private-btn" disabled={isPrivateBookingDisabled}>הזמנת הפלגה פרטית</button>
+                        <button class={clubBookingButtonClass} onclick={handleDashboardJoinClub} id="join-club-btn" disabled={isClubBookingDisabled}>הרשמה להפלגה מודרכת</button>
+                        <button class="cta-button logout-btn" onclick={handleLogout} id="dashboard-logout-btn">
+                            <lightning-icon icon-name="utility:logout" size="x-small" class="slds-m-right_small" variant="inverse"></lightning-icon>
+                            יציאה
+                        </button>
+                    </div>
+
+                    <template lwc:if={showSubscriptionButton}>
+                        <div class="subscription-nav slds-m-top_large slds-text-align_center">
+                            <button class="cta-button subscription-btn" onclick={handleNavigateToSubscription} id="my-subscription-btn">פרטי המנוי שלי</button>
+                        </div>
+                    </template>
+                    
+                    <div class="dashboard-lists">
+                        <h1 class="main-list-title slds-text-align_center slds-m-bottom_large">ההפלגות העתידיות שלי</h1>
+                        <template lwc:if={isDesktop}>
+                            <div class="list-section">
+                                <h2 class="list-title">ההפלגות הפרטיות שלי</h2>
+                                <template lwc:if={privateReservationArray.length}>
+                                    <table class="dashboard-table">
+                                        <thead>
+                                            <tr>
+                                                <th>תאריך הפלגה</th>
+                                                <th>שעות הפלגה</th>
+                                                <th>סירה</th>
+                                                <th>סטטוס</th>
+                                                <th>פעולות</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template for:each={privateReservationArray} for:item="cruise">
+                                                <tr key={cruise.id}>
+                                                    <td>{cruise.customDisplayDate}</td>
+                                                    <td>{cruise.customDisplayTime}</td>
+                                                    <td>{cruise.boatName}</td>
+                                                    <td>{cruise.status}</td>
+                                                    <td>
+                                                        <template lwc:if={cruise.canCancelPrivate}>
+                                                            <button class="cancel-button" data-id={cruise.id} onclick={cancelPrivateCruise}>ביטול</button>
+                                                        </template>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </template>
+                                <template lwc:else>
+                                    <p class="no-cruises-message">לא נמצאו הפלגות עתידיות.</p>
+                                </template>
+                            </div>
+                            
+                            <div class="list-section">
+                                <h2 class="list-title">ההפלגות המודרכות שלי</h2>
+                                <template lwc:if={myClubCruisesDashboard.length}>
+                                    <table class="dashboard-table">
+                                        <thead>
+                                            <tr>
+                                                <th>תאריך הפלגה</th>
+                                                <th>שעות הפלגה</th>
+                                                <th>סירה</th>
+                                                <th>מידע נוסף</th>
+                                                <th>פעולות</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template for:each={myClubCruisesDashboard} for:item="cruise">
+                                                <tr key={cruise.id}>
+                                                    <td>{cruise.customDisplayDate}</td>
+                                                    <td>{cruise.customDisplayTime}</td>
+                                                    <td>{cruise.boatName}</td>
+                                                    <td>{cruise.additionalInfo}</td>
+                                                    <td>
+                                                        <template for:each={cruise.coCruiseRecords} for:item="coCruise">
+                                                            <template lwc:if={cruise.canCancelClub}>
+                                                                <button key={coCruise.Id} class="cancel-button" data-id={coCruise.Id} onclick={cancelClubCruise}>ביטול</button>
+                                                            </template>
+                                                        </template>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </template>
+                                <template lwc:else>
+                                    <p class="no-cruises-message">לא נמצאו הפלגות מודרכות עתידיות.</p>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template lwc:else>
+                            <div class="dashboard-tabs">
+                                <button class={privateTabClass} onclick={handleTabClick} data-tab="private">הפלגות פרטיות</button>
+                                <button class={clubTabClass} onclick={handleTabClick} data-tab="club">הפלגות מודרכות</button>
+                            </div>
+
+                            <template lwc:if={isPrivateTabActive}>
+                                <div class="list-section">
+                                    <h2 class="list-title">ההפלגות הפרטיות שלי</h2>
+                                    <div class="mobile-cards">
+                                        <template lwc:if={privateReservationArray.length}>
+                                            <template for:each={privateReservationArray} for:item="cruise">
+                                                <div key={cruise.id} class="mobile-card">
+                                                    <div class="card-row">
+                                                        <div class="card-item"><span class="label">תאריך:</span> {cruise.customDisplayDate}</div>
+                                                        <div class="card-item"><span class="label">שעה:</span> {cruise.customDisplayTime}</div>
+                                                    </div>
+                                                    <div class="card-row">
+                                                        <div class="card-item"><span class="label">סירה:</span> {cruise.boatName}</div>
+                                                        <div class="card-item"><span class="label">סטטוס:</span> {cruise.status}</div>
+                                                    </div>
+                                                    <template lwc:if={cruise.canCancelPrivate}>
+                                                        <div class="card-row centered">
+                                                            <button class="cancel-button mobile-cancel" data-id={cruise.id} onclick={cancelPrivateCruise}>ביטול הפלגה</button>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </template>
+                                        <template lwc:else>
+                                            <p class="no-cruises-message">לא נמצאו הפלגות עתידיות.</p>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+
+                            <template lwc:if={isClubTabActive}>
+                                <div class="list-section">
+                                    <h2 class="list-title">ההפלגות המודרכות שלי</h2>
+                                    <div class="mobile-cards">
+                                        <template lwc:if={myClubCruisesDashboard.length}>
+                                            <template for:each={myClubCruisesDashboard} for:item="cruise">
+                                                <div key={cruise.id} class="mobile-card">
+                                                    <div class="card-row">
+                                                        <div class="card-item"><span class="label">תאריך:</span> {cruise.customDisplayDate}</div>
+                                                        <div class="card-item"><span class="label">שעה:</span> {cruise.customDisplayTime}</div>
+                                                    </div>
+                                                    <div class="card-row">
+                                                        <div class="card-item"><span class="label">סירה:</span> {cruise.boatName}</div>
+                                                        <div class="card-item"><span class="label">מידע נוסף:</span> {cruise.additionalInfo}</div>
+                                                    </div>
+                                                    <template for:each={cruise.coCruiseRecords} for:item="coCruise">
+                                                        <template lwc:if={cruise.canCancelClub}>
+                                                            <div key={coCruise.Id} class="card-row centered">
+                                                                <button class="cancel-button mobile-cancel" data-id={coCruise.Id} onclick={cancelClubCruise}>ביטול הרשמה</button>
+                                                            </div>
+                                                        </template>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </template>
+                                        <template lwc:else>
+                                            <p class="no-cruises-message">לא נמצאו הפלגות מודרכות עתידיות.</p>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </template>
+                        <!-- Past Guided Cruises Section -->
+                        <div class="past-cruises-container slds-m-top_xx-large">
+                            <button class="collapsible-header" onclick={togglePastCruises}>
+                                <span class="header-text">היסטוריית הפלגות (הפלגות עבר)</span>
+                                <lightning-icon icon-name={pastCruisesIcon} size="x-small" class="slds-m-left_small" variant="brand"></lightning-icon>
+                            </button>
+                            
+                            <template lwc:if={isPastCruisesOpen}>
+                                <div class="past-cruises-content slds-m-top_medium">
+                                    <template lwc:if={showShowAllPastButton}>
+                                        <div class="slds-text-align_center slds-m-bottom_medium">
+                                            <button class="slds-button slds-button_outline-brand" onclick={handleShowAllPastCruises} disabled={hasLoadedAllPast}>
+                                                הצגת כל ההפלגות בעבר
+                                            </button>
+                                        </div>
+                                    </template>
+                                    <template lwc:if={pastClubCruises.length}>
+                                        <table class="dashboard-table past-table">
+                                            <thead>
+                                                <tr>
+                                                    <th>תאריך הפלגה</th>
+                                                    <th>שעות הפלגה</th>
+                                                    <th>סוג הפלגה</th>
+                                                    <th>סירה</th>
+                                                    <th>מידע נוסף</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template for:each={pastClubCruises} for:item="pc">
+                                                    <tr key={pc.Id}>
+                                                        <td>{pc.displayDate}</td>
+                                                        <td>{pc.displayTime}</td>
+                                                        <td>{pc.sailingTypeLabel}</td>
+                                                        <td>{pc.boatName}</td>
+                                                        <td>{pc.additionalInfo}</td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                        
+                                        <!-- Mobile version for past cruises -->
+                                        <div class="mobile-cards past-mobile-list">
+                                            <template for:each={pastClubCruises} for:item="pc">
+                                                <div key={pc.Id} class="mobile-card past-card">
+                                                    <div class="card-row">
+                                                        <div class="card-item"><span class="label">תאריך:</span> {pc.displayDate}</div>
+                                                        <div class="card-item"><span class="label">שעה:</span> {pc.displayTime}</div>
+                                                    </div>
+                                                    <div class="card-row">
+                                                        <div class="card-item"><span class="label">סוג הפלגה:</span> {pc.sailingTypeLabel}</div>
+                                                    </div>
+                                                    <div class="card-row">
+                                                        <div class="card-item"><span class="label">סירה:</span> {pc.boatName}</div>
+                                                        <div class="card-item"><span class="label">מידע:</span> {pc.additionalInfo}</div>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </template>
+                                    <template lwc:else>
+                                        <p class="no-cruises-message">לא נמצאו הפלגות עבר.</p>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+            </template>
+            <template lwc:else>
+                <!-- Back to Home Button -->
+                <div class="back-nav slds-p-horizontal_medium slds-p-bottom_medium slds-grid slds-grid_align-end">
+                    <button class="slds-button slds-button_outline-brand back-btn slds-m-left_small" onclick={handleNavigateToDashboard} id="back-to-home-btn">
+                        <lightning-icon icon-name="utility:home" size="x-small" class="slds-m-right_small" variant="brand"></lightning-icon>
+                        חזרה לדף הבית
+                    </button>
+                    <button class="slds-button slds-button_outline-brand logout-btn-outline" onclick={handleLogout} id="back-logout-btn">
+                        <lightning-icon icon-name="utility:logout" size="x-small" class="slds-m-right_small" variant="brand"></lightning-icon>
+                        יציאה
+                    </button>
+                </div>
+
+                <template lwc:if={navigationItem.renderPrivateReservation}>
+                    <c-private-reservation-page account-id={accountId} is-desktop={isDesktop} 
+                        initial-show-search-section={initialShowSearchSection}
+                        private-reservation-array={privateReservationArray} onrefresh={loadHomePageTabsData}
+                        onsuccess={handleNavigateToDashboard}>
+                    </c-private-reservation-page>
+                </template>
+
+                <template lwc:if={navigationItem.renderJoinClubSailing}>
+                    <c-club-cruises-page account={account} transaction={transaction} is-desktop={isDesktop} 
+                        initial-show-search-section={initialShowSearchSection}
+                        is-student-user={isStudentUser}
+                        club-cruises-array={clubCruisesArray} onrefresh={loadHomePageTabsData}>
+                    </c-club-cruises-page>
+                </template>
+
+                <template lwc:if={navigationItem.renderCharters}>
+                    <section class="slds-align_absolute-center slds-var-m-top_xx-large">
+                        <img src={charterComingSoon}>
+                    </section>
+                </template>
+
+                <template lwc:if={navigationItem.renderMySubscription}>
+                    <div class="subscription-page-wrapper slds-p-around_medium" style="background: white; min-height: 80vh; border-radius: 12px; margin: 1rem;">
+                        <c-sea-time-subscriptions account-id={accountId} is-desktop={isDesktop} 
+                            display-subscription="false" onrefresh={loadHomePageTabsData}>
+                        </c-sea-time-subscriptions>
+                    </div>
+                </template>
+            </template>
+        </section>
+    </template>
+    </div> 
+</template>

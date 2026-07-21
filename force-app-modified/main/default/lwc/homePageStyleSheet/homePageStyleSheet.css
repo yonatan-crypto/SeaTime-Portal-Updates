@@ -1,0 +1,161 @@
+@import "c/seaTimeAppStyleSheet";
+
+* {
+    --home-element-bg-color: #fff;
+}
+
+.tile {
+    background-color: var(--home-element-bg-color);
+    padding: 1rem;
+    border-radius: .5rem;
+    margin-bottom: 1rem;
+}
+
+.center-align-section-item {
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+}
+
+.center-align-section-item p {
+    flex: 1;
+    text-align: end;
+    font-weight: 600;
+}
+
+/* Mobile-specific fix for overlapping numbers */
+@media screen and (max-width: 768px) {
+    .center-align-section-item {
+        justify-content: space-between;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .center-align-section-item p {
+        flex: 0 1 auto;
+        min-width: 0;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+        margin: 0;
+        padding: 0 0.25rem;
+    }
+}
+
+.days-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: -.5rem;
+}
+
+.day-button {
+    border: 1px solid lightgray;
+    padding: .1rem;
+    margin: .3rem;
+    border-radius: .75rem;
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    font-weight: 600;
+    width: 2.8rem;
+    flex-direction: column;
+    align-items: center;
+}
+
+.selected-day-button {
+    background-color: var(--app-theme-color-light);
+}
+
+.day-button:hover {
+    cursor: pointer;
+    background-color: var(--app-theme-color-light);
+}
+
+.search-button-container {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.right-align-text {
+    text-align: right;
+    padding-top: 1rem;
+}
+
+.search-button {
+    flex: 1;
+}
+
+.private-reservation-header {
+    display: flex;
+    justify-content: space-between;
+    margin: 4rem 0 1rem;
+    width: 100%;
+    flex-wrap: wrap;
+    align-items: center;
+    padding: .5rem;
+}
+
+.private-reservation-sub-header {
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 900;
+    margin-bottom: 1rem;
+}
+
+.add-new-reservation {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap-reverse;
+}
+
+.reservation-label {
+    margin-top: 5rem;
+    text-align: right;
+    color: #fff;
+    font-weight: 600;
+    font-size: 2rem;
+}
+
+.search-section {
+    background-color: #fff;
+    margin: 0 .5rem 1rem;
+    border-radius: .5rem;
+    flex: 1;
+    align-self: flex-end;
+    height: min-content;
+}
+
+.main-section-desktop {
+    position: relative;
+    width: 65%;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.search-result {
+    margin: 0 .5rem;
+    flex: 1 1 50%;
+    overflow: hidden;
+}
+
+.fixed-search-section {
+    position: fixed;
+    width: auto;
+    background: #fff;
+    border-radius: .5rem;
+    margin-right: 1rem;
+    padding: 1rem;
+    max-height: 55vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    z-index: 999999;
+}
+
+.fixed-sub-header {
+    position: fixed;
+    right: 1.5%;
+}
+
+.box-padding {
+    padding: 1rem;
+}

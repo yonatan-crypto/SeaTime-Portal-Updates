@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RecordType xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Subscription</fullName>
+    <active>false</active>
+    <label>Subscription</label>
+    <picklistValues>
+        <picklist>CDW__c</picklist>
+        <values>
+            <fullName>כן</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>לא</fullName>
+            <default>true</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>Field1__c</picklist>
+        <values>
+            <fullName>GMDSS</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>משיט 30</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>קורס ASA בארץ</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>קורס ASA בחול</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>קורס בסיסי</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>קפריסין</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>Subscripption_Type__c</picklist>
+        <values>
+            <fullName>Bank Hours</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Enrichment Ticket</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>Type__c</picklist>
+        <values>
+            <fullName>Catamaran</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Sailboat</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>Yacht</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>type_of_membership__c</picklist>
+        <values>
+            <fullName>חבר מועדון כולל פרטיות</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>מודרכות בלבד</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>תלמיד</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+</RecordType>

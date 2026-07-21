@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Boat__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <label>Boat</label>
+    <referenceTo>Boats__c</referenceTo>
+    <relationshipLabel>Boat Availability</relationshipLabel>
+    <relationshipName>Boat_Availability</relationshipName>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Lookup</type>
+</CustomField>

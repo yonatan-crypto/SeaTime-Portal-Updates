@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>cruise_time_formula__c</fullName>
+    <externalId>false</externalId>
+    <formula>RIGHT(&quot;0&quot; &amp; TEXT(HOUR(TIMEVALUE(Start_Date__c + (3/24)))), 2) &amp;
+&quot;:&quot; &amp;
+RIGHT(&quot;0&quot; &amp; TEXT(MINUTE(TIMEVALUE(Start_Date__c + (3/24)))), 2) &amp;
+&quot;-&quot; &amp;
+RIGHT(&quot;0&quot; &amp; TEXT(HOUR(TIMEVALUE(End_Date__c + (3/24)))), 2) &amp;
+&quot;:&quot; &amp;
+RIGHT(&quot;0&quot; &amp; TEXT(MINUTE(TIMEVALUE(End_Date__c + (3/24)))), 2)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>שעות הפלגה (נוסחה)</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

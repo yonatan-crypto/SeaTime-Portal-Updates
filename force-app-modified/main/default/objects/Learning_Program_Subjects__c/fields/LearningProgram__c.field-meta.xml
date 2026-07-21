@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>LearningProgram__c</fullName>
+    <label>תכנית לימוד</label>
+    <lookupFilter>
+        <active>true</active>
+        <filterItems>
+            <field>Learning_program__c.Status__c</field>
+            <operation>equals</operation>
+            <value>פעילה</value>
+        </filterItems>
+        <isOptional>false</isOptional>
+    </lookupFilter>
+    <referenceTo>Learning_program__c</referenceTo>
+    <relationshipLabel>מקצועות תכנית הלימוד</relationshipLabel>
+    <relationshipName>Learning_Program_Subjects</relationshipName>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>

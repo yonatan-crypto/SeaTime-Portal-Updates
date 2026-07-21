@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RecordType xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>basic_course</fullName>
+    <active>true</active>
+    <label>לא בשימוש</label>
+    <picklistValues>
+        <picklist>Field1__c</picklist>
+        <values>
+            <fullName>ימאות</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>מכונה</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>מעשי</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>ניווט חופי</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>ניווט מכשירים</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>Qualification__c</picklist>
+        <values>
+            <fullName>Cruiser 30</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>STUDY_LOCATION__c</picklist>
+        <values>
+            <fullName>הרצליה</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>חיפה</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>תל אביב</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>X1__c</picklist>
+        <values>
+            <fullName>ימאות</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>מכונה</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>ניווט חופי</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>ניווט מכשירים</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>X2__c</picklist>
+        <values>
+            <fullName>ימאות</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>מכונה</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>ניווט חופי</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>ניווט מכשירים</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>X3__c</picklist>
+        <values>
+            <fullName>ימאות</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>מככונה</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>ניווט חופי</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>ניווט מכשירים</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>X4__c</picklist>
+        <values>
+            <fullName>ימאות</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>מכונה</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>ניווט חופי</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>ניווט מכשירים</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>course_instructor__c</picklist>
+        <values>
+            <fullName>ארז פוד</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>בן זגלשטיין</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>דימיטרי יגלסקי</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>חגי לוין</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>יונתן ברסלר</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>נמרוד פוזנר</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>ענבל הררי</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>רפי רוזנבאום</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>שקד פולנסקי</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>תום זולברג</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+    <picklistValues>
+        <picklist>study_type__c</picklist>
+        <values>
+            <fullName>כיתה</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>לימוד עצמי</fullName>
+            <default>false</default>
+        </values>
+        <values>
+            <fullName>קורס פרטי עם מדריך</fullName>
+            <default>false</default>
+        </values>
+    </picklistValues>
+</RecordType>

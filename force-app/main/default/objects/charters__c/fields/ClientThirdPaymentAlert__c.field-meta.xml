@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ClientThirdPaymentAlert__c</fullName>
+    <externalId>false</externalId>
+    <formula>IF(
+  ISBLANK(ThirdPaymentDate__c),
+  &quot;&quot;,
+  IF(
+    AND(
+      ThirdPaymentBalance__c &gt; 0,
+      ThirdPaymentDate__c &lt; TODAY()
+    ),
+    IMAGE(
+      &quot;https://sea-time.file.force.com/sfc/servlet.shepherd/version/renditionDownload?rendition=ORIGINAL_Png&amp;versionId=068Td00000JGUNO&amp;operationContext=CHATTER&amp;contentId=05TTd00000MaltQ&quot;,
+      &quot;RED&quot;,
+      50,
+      50
+    ),
+    IF(
+      ThirdPaymentBalance__c &lt;= 0,
+      IMAGE(
+        &quot;https://sea-time.file.force.com/sfc/servlet.shepherd/version/renditionDownload?rendition=ORIGINAL_Png&amp;versionId=068Td00000JGRm8&amp;operationContext=CHATTER&amp;contentId=05TTd00000Mahhy&quot;,
+        &quot;GREEN&quot;,
+        50,
+        50
+      ),
+      IMAGE(
+        &quot;https://sea-time.file.force.com/sfc/servlet.shepherd/version/renditionDownload?rendition=ORIGINAL_Png&amp;versionId=068Td00000JGUgl&amp;operationContext=CHATTER&amp;contentId=05TTd00000MaiQz&quot;,
+        &quot;ORANGE&quot;,
+        50,
+        50
+      )
+    )
+  )
+)</formula>
+    <formulaTreatBlanksAs>BlankAsZero</formulaTreatBlanksAs>
+    <label>התראת תשלום 3 לקוח</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Text</type>
+    <unique>false</unique>
+</CustomField>

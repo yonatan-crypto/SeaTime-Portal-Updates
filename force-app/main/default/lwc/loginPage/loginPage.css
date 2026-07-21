@@ -1,0 +1,81 @@
+@import "c/seaTimeAppStyleSheet";
+@import "c/customModalStyle";
+
+.login-header {
+    font-size: 1.5rem;
+    font-weight: 600;
+    text-align: center;
+}
+
+.first-header {
+    padding: 0 !important;
+}
+
+.container-section {
+    height: 20rem;
+    width: 19rem !important;
+}
+
+.otp-header {
+    font-weight: 600;
+    font-size: 1.1rem;
+    margin-bottom: 1rem;
+}
+
+.expand-button {
+    background: #fff;
+    padding: .25rem .5rem;
+    border-radius: .25rem;
+    border: 1px solid #fff;
+}
+
+.expand-button:hover {
+    cursor: pointer;
+}
+
+.moderate-custom-button {
+    background-color: var(--app-theme-color-moderate);
+    padding: .5rem;
+    margin: .5rem;
+    color: #fff;
+    width: 19rem;
+    border-radius: .5rem;
+}
+
+.field-label {
+    text-align: right;
+    padding: 0;
+}
+
+.field-label {
+    text-align: right;
+}
+
+.faqs-verbiage {
+    padding-top: 1rem;
+}
+
+.otp-input {
+    text-align: right;
+    width: 15rem;
+}
+
+.otp-error-message {
+    width: 15rem;
+}
+
+main {
+    width: 15rem;
+}
+
+/* Hide standard Salesforce language selector */
+.language-selector, 
+.forceCommunityLanguageSelector,
+.comm-layout-column .language-selector,
+.forceCommunityLanguageSelector .slds-dropdown-trigger,
+[class*="languageSelector"] {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}

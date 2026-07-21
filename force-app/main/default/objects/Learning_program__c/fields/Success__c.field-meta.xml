@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Success__c</fullName>
+    <label>Success</label>
+    <summaryFilterItems>
+        <field>Learning_Program_Subjects__c.Pass_or_Fail__c</field>
+        <operation>equals</operation>
+        <value>עבר</value>
+    </summaryFilterItems>
+    <summaryForeignKey>Learning_Program_Subjects__c.LearningProgram__c</summaryForeignKey>
+    <summaryOperation>count</summaryOperation>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Summary</type>
+</CustomField>

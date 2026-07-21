@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Field1__c</fullName>
+    <label>מקצוע נוכחי</label>
+    <required>false</required>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>מכונה</fullName>
+                <default>false</default>
+                <label>מכונה</label>
+            </value>
+            <value>
+                <fullName>ימאות</fullName>
+                <default>false</default>
+                <label>ימאות</label>
+            </value>
+            <value>
+                <fullName>ניווט חופי</fullName>
+                <default>false</default>
+                <label>ניווט חופי</label>
+            </value>
+            <value>
+                <fullName>ניווט מכשירים</fullName>
+                <default>false</default>
+                <label>ניווט מכשירים</label>
+            </value>
+            <value>
+                <fullName>מעשי</fullName>
+                <default>false</default>
+                <label>מעשי</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

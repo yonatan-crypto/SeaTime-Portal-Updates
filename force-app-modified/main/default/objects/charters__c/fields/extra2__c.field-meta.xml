@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>extra2__c</fullName>
+    <label>תוספת 2</label>
+    <required>false</required>
+    <trackFeedHistory>false</trackFeedHistory>
+    <trackHistory>false</trackHistory>
+    <trackTrending>false</trackTrending>
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>ניקיון סופי</fullName>
+                <default>false</default>
+                <label>ניקיון סופי</label>
+            </value>
+            <value>
+                <fullName>טרנזיט לוג</fullName>
+                <default>false</default>
+                <label>טרנזיט לוג</label>
+            </value>
+            <value>
+                <fullName>מנוע לדינגי</fullName>
+                <default>false</default>
+                <label>מנוע לדינגי</label>
+            </value>
+            <value>
+                <fullName>הקטנת השתתפות עצמית</fullName>
+                <default>false</default>
+                <label>הקטנת השתתפות עצמית</label>
+            </value>
+            <value>
+                <fullName>קיאק</fullName>
+                <default>false</default>
+                <label>קיאק</label>
+            </value>
+            <value>
+                <fullName>סאפ</fullName>
+                <default>false</default>
+                <label>סאפ</label>
+            </value>
+            <value>
+                <fullName>סקיפר</fullName>
+                <default>false</default>
+                <label>סקיפר</label>
+            </value>
+            <value>
+                <fullName>מארחת</fullName>
+                <default>false</default>
+                <label>מארחת</label>
+            </value>
+            <value>
+                <fullName>WIFI</fullName>
+                <default>false</default>
+                <label>WIFI</label>
+            </value>
+            <value>
+                <fullName>צ&apos;ק אין מוקדם</fullName>
+                <default>false</default>
+                <label>צ&apos;ק אין מוקדם</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

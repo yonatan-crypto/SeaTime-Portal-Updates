@@ -1,0 +1,503 @@
+@import "c/homePageStyleSheet";
+
+* {
+    --app-width: 39rem;
+}
+
+/* Nav bar selector */
+nav, 
+.siteforceHeader, 
+.slds-brand-band, 
+.app-header, 
+.global-header,
+.siteforceServiceFooter,
+.global-footer,
+.forceCommunityHeader,
+.forceCommunityFooter,
+footer,
+header {
+    display: none !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    visibility: hidden !important;
+}
+
+/* Fix main container to fill top gap */
+.siteforceServiceBody,
+.siteforceContentArea,
+.comm-page-custom,
+.uiOutputRichText,
+.cCenterPanel,
+.contentRegion {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+}
+
+/* Collapse Salesforce wrapper gaps */
+:host {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
+
+.back-nav {
+    padding-top: 0.25rem !important;
+    padding-bottom: 0.25rem !important;
+}
+
+.subscription-page-wrapper {
+    margin-top: 0.25rem !important;
+}
+
+a {
+    padding: 0 .5rem;
+}
+
+a {
+    color: #fff;
+}
+
+a:hover {
+    color: var(--app-theme-color-moderate) !important;
+}
+
+
+.selected-nav-item {
+    color: var(--app-theme-color-moderate) !important;
+    text-decoration: underline !important;
+}
+
+/* End of nav bar selectors */
+
+.main-section {
+    overflow: auto;
+    /* min-width: var(--app-width); - Removed for better responsiveness */
+    position: relative;
+    padding: 0 1rem;
+    padding-top: 0;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+@media (max-width: 950px) {
+    .home-page-style {
+        overflow-x: hidden;
+        width: 100%;
+    }
+}
+
+/* Dashboard Styles */
+.dashboard-container {
+    background-color: rgba(255, 255, 255, 0.95);
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin: 0.5rem auto 1rem;
+    max-width: 1000px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    direction: rtl;
+}
+
+.dashboard-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-bottom: 3rem;
+}
+
+.cta-button {
+    background-color: var(--app-theme-color-moderate, #0070d2);
+    color: white;
+    font-size: 1.25rem;
+    font-weight: bold;
+    padding: 1rem 2rem;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, background-color 0.2s;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.cta-button:hover {
+    transform: translateY(-2px);
+    background-color: var(--app-theme-color-dark, #005fb2);
+}
+
+.cta-button-disabled {
+    background-color: #b0bec5 !important;
+    color: #fff !important;
+    cursor: not-allowed !important;
+    opacity: 0.65;
+    box-shadow: none;
+}
+
+.cta-button-disabled:hover {
+    transform: none !important;
+    background-color: #b0bec5 !important;
+}
+
+.subscription-btn {
+    background-color: #f7f9fb;
+    color: var(--app-theme-color-moderate, #16A3AD);
+    border: 2px solid var(--app-theme-color-moderate, #16A3AD);
+    box-shadow: none;
+}
+
+.subscription-btn:hover {
+    background-color: var(--app-theme-color-moderate, #16A3AD);
+    color: white;
+}
+
+.back-nav {
+    margin-top: 1rem;
+}
+
+.back-btn {
+    border: 1px solid var(--app-theme-color-moderate, #16A3AD);
+    color: var(--app-theme-color-moderate, #16A3AD);
+    font-weight: bold;
+    border-radius: 20px;
+    padding: 0.5rem 1.5rem;
+    transition: all 0.2s;
+}
+
+.back-btn:hover {
+    background: var(--app-theme-color-moderate, #16A3AD);
+    color: white;
+}
+
+.subscription-page-wrapper {
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.dashboard-lists {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+}
+
+.main-list-title {
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #0f172a;
+    border-bottom: 3px solid #16A3AD;
+    display: inline-block;
+    padding-bottom: 0.3rem;
+    margin: 2rem auto 0.5rem auto; /* Reduced from 3rem to save space */
+}
+
+.list-section {
+    background: rgba(255, 255, 255, 0.9); 
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 1rem;
+}
+
+.list-title {
+    font-size: 1.25rem; /* Reduced from 1.5rem */
+    color: var(--app-theme-color-dark, #333);
+    border-bottom: 2px solid var(--app-theme-color-moderate, #0070d2);
+    padding-bottom: 0.25rem;
+    margin-bottom: 0.75rem; /* Reduced from 1.5rem */
+}
+
+.dashboard-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.dashboard-table th, .dashboard-table td {
+    padding: 0.75rem;
+    text-align: right;
+    border-bottom: 1px solid #eee;
+}
+
+.dashboard-table th {
+    background-color: #f7f9fb;
+    font-weight: 600;
+}
+
+.cancel-button {
+    background-color: #d93e3e;
+    color: white;
+    padding: 0.4rem 0.8rem;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background-color 0.2s;
+}
+
+.cancel-button:hover {
+    background-color: #b53232;
+}
+
+.no-cruises-message {
+    text-align: center;
+    color: #666;
+    font-style: italic;
+    padding: 1rem;
+}
+
+/* Mobile Tabs & Enhanced Card Styles */
+.dashboard-tabs {
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.tab-button {
+    flex: 1;
+    padding: 0.75rem;
+    border: 1px solid var(--app-theme-color-moderate, #0070d2);
+    background: white;
+    color: var(--app-theme-color-moderate, #0070d2);
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab-button.active {
+    background: var(--app-theme-color-moderate, #0070d2);
+    color: white;
+}
+
+.mobile-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.mobile-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.card-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.8rem;
+    border-bottom: 1px solid #f9f9f9;
+    padding-bottom: 0.4rem;
+}
+
+.card-row:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.card-row.centered {
+    justify-content: center;
+    border-bottom: none;
+}
+
+.card-item {
+    flex: 1;
+    font-size: 0.95rem;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+}
+
+.label {
+    font-weight: bold;
+    color: var(--app-theme-color-dark, #005fb2);
+    font-size: 0.8rem;
+    margin-bottom: 0.2rem;
+}
+
+.mobile-cancel {
+    width: 100%;
+    margin-top: 0.5rem;
+    padding: 0.6rem;
+    font-weight: bold;
+}
+
+@media (max-width: 600px) {
+    .dashboard-container {
+        padding: 0.75rem;
+        margin-top: 0;
+        border-radius: 0;
+        max-width: 100%;
+        margin-left: 0;
+        margin-right: 0;
+    }
+
+    .dashboard-buttons {
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .cta-button {
+        width: 100%;
+        padding: 0.85rem;
+        font-size: 1.1rem;
+    }
+
+    /* Prevent dashboard table overflow on mobile */
+    .dashboard-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .dashboard-table th,
+    .dashboard-table td {
+        padding: 0.5rem 0.4rem;
+        font-size: 0.88rem;
+        white-space: nowrap;
+    }
+
+    /* Full bleed on mobile - no side padding, no background visible */
+    .main-section {
+        padding: 0 !important;
+    }
+
+    /* Remove margins from subscription wrapper */
+    .subscription-page-wrapper {
+        margin: 0 !important;
+        border-radius: 0 !important;
+        min-height: 100vh !important;
+    }
+
+    .main-list-title {
+        font-size: 1.25rem;
+        margin: 1rem auto 0.5rem auto;
+    }
+
+    /* Mobile cards take full width */
+    .mobile-card {
+        border-radius: 6px;
+    }
+
+    .list-section {
+        border-radius: 0;
+        margin: 0 !important;
+    }
+}
+
+/* Past Cruises Collapsible Styles */
+.past-cruises-container {
+    border-top: 1px solid #e2e8f0;
+    padding-top: 2rem;
+    margin-top: 2rem;
+}
+
+.collapsible-header {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    padding: 1.25rem 1.5rem;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.collapsible-header:hover {
+    background: #f8fafc;
+    border-color: #16A3AD;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+}
+
+.header-text {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.past-cruises-content {
+    animation: fadeInDown 0.4s ease-out;
+    padding: 1rem 0.5rem;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.past-table {
+    border: 1px solid #f1f5f9;
+    border-radius: 6px;
+    overflow: hidden;
+    margin-top: 0.5rem;
+}
+
+.past-table th {
+    background-color: #f1f5f9;
+    color: #64748b;
+    text-transform: uppercase;
+    font-size: 0.75rem;
+    letter-spacing: 0.05em;
+}
+
+.past-card {
+    border-right: 4px solid #94a3b8;
+}
+
+.past-mobile-list {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .past-table {
+        display: none;
+    }
+    .past-mobile-list {
+        display: flex;
+    }
+}
+
+.logout-btn {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+    border: 2px solid #e2e8f0 !important;
+}
+
+.logout-btn:hover {
+    background: #e2e8f0 !important;
+    color: #1e293b !important;
+    border-color: #cbd5e1 !important;
+}
+
+.logout-btn-outline {
+    background: #ffffff !important;
+    color: #ef4444 !important;
+    border: 2px solid #fecaca !important;
+    padding: 0.6rem 1.2rem !important;
+    border-radius: 20px !important;
+    font-weight: 800 !important;
+    font-size: 0.9rem !important;
+    cursor: pointer !important;
+    transition: all 0.2s !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.logout-btn-outline:hover {
+    background: #fef2f2 !important;
+    border-color: #ef4444 !important;
+    color: #dc2626 !important;
+}
