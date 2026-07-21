@@ -1,4 +1,4 @@
-public class SubCustomerSailing {
+public without sharing class SubCustomerSailing {
   
    public static void insertMethod(List<Co_Cruise_Members__c> newSubCustomerList){
         try{
@@ -112,6 +112,25 @@ public class SubCustomerSailing {
                     
                 }
             }
+
+            if(oldMap.get(c.Id).Status__c != newMap.get(c.Id).Status__c){
+                if(newMap.get(c.Id).Status__c == 'Canceled' && oldMap.get(c.Id).Status__c != 'Canceled'){
+                    if(newMap.get(c.Id).Cruise__c != null){
+                        if(!subtractCountMap.containsKey(newMap.get(c.Id).Cruise__c)){
+                            subtractCountMap.put(newMap.get(c.Id).Cruise__c, 0);
+                        }
+                        subtractCountMap.put(newMap.get(c.Id).Cruise__c, subtractCountMap.get(newMap.get(c.Id).Cruise__c) + 1);
+                    }
+                }
+                else if(oldMap.get(c.Id).Status__c == 'Canceled' && newMap.get(c.Id).Status__c != 'Canceled'){
+                    if(newMap.get(c.Id).Cruise__c != null){
+                        if(!addCountMap.containsKey(newMap.get(c.Id).Cruise__c)){
+                            addCountMap.put(newMap.get(c.Id).Cruise__c, 0);
+                        }
+                        addCountMap.put(newMap.get(c.Id).Cruise__c, addCountMap.get(newMap.get(c.Id).Cruise__c) + 1);
+                    }
+                }
+            }
             
         }
         
@@ -123,7 +142,9 @@ public class SubCustomerSailing {
                 if( c.SCCount__c!=null){
                     c.SCCount__c =  c.SCCount__c + addCountMap.get(c.Id);
                 }
-                c.SCCount__c = addCountMap.get(c.Id);
+                else {
+                    c.SCCount__c = addCountMap.get(c.Id);
+                }
             }
             if(subtractCountMap.containskey(c.Id)){
                 if( c.SCCount__c!=null){
@@ -133,6 +154,44 @@ public class SubCustomerSailing {
         }
         
         update relatedCruiseRecords;
+
+        // Recalculate month counts if status changed
+        Set<String> sailMonths = new Set<String>();
+        Set<String> accountIds = new Set<String>();
+        for(Co_Cruise_Members__c c : newMap.values()){
+            Co_Cruise_Members__c oldC = oldMap.get(c.Id);
+            if(c.Status__c != oldC.Status__c){
+                if(c.Account_Co__c != null) accountIds.add(c.Account_Co__c);
+                if(c.SailStartMonthYear__c != null) sailMonths.add(c.SailStartMonthYear__c);
+            }
+        }
+
+        if(!sailMonths.isEmpty() && !accountIds.isEmpty()){
+            List<Co_Cruise_Members__c> cruiseMembers = [SELECT ID,Account_Co__c,SailStartMonthYear__c,noOfSCCountsForSelectedMonth__c from
+                                                        Co_Cruise_Members__c where Status__c != 'Canceled' AND SailStartMonthYear__c in:sailMonths
+                                                        AND Account_Co__c IN:accountIds];
+            
+            Map<String, Integer> counts = new Map<String, Integer>();
+            for(Co_Cruise_Members__c member : cruiseMembers){
+                String key = member.Account_Co__c + '-' + member.SailStartMonthYear__c;
+                counts.put(key, (counts.containsKey(key) ? counts.get(key) : 0) + 1);
+            }
+
+            List<Co_Cruise_Members__c> membersToUpdate = [SELECT ID,Account_Co__c,SailStartMonthYear__c,noOfSCCountsForSelectedMonth__c from
+                                                        Co_Cruise_Members__c where SailStartMonthYear__c in:sailMonths
+                                                        AND Account_Co__c IN:accountIds];
+            
+            for(Co_Cruise_Members__c member : membersToUpdate){
+                String key = member.Account_Co__c + '-' + member.SailStartMonthYear__c;
+                member.noOfSCCountsForSelectedMonth__c = counts.get(key) != null ? counts.get(key) : 0;
+            }
+            
+            if(!membersToUpdate.isEmpty()){
+                CoCruiseTriggerHandler.byPassTrigger = true;
+                update membersToUpdate;
+                CoCruiseTriggerHandler.byPassTrigger = false;
+            }
+        }
                    
     }
     

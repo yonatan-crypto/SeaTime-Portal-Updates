@@ -45,7 +45,6 @@ export default class ClubCruisesPage extends LightningElement {
     @track filterSchool = true;
     @track filterTheory = true;
     @track filterCert = true;
-    @track filterFriends = true;
 
     @api get clubCruisesArray() {
         return this._clubCruisesArray
@@ -169,7 +168,6 @@ export default class ClubCruisesPage extends LightningElement {
         else if (filterId === 'school') this.filterSchool = checked;
         else if (filterId === 'theory') this.filterTheory = checked;
         else if (filterId === 'cert') this.filterCert = checked;
-        else if (filterId === 'friends') this.filterFriends = checked;
 
         service.updateSelectedClubCruisesArray();
     }
@@ -182,12 +180,15 @@ export default class ClubCruisesPage extends LightningElement {
         if (this.showBookCruiseModal) {
             this.showBookCruiseModal = false
         } else {
-            this.showBookCruiseModal = true
             const selectedCruiseId = event.target.dataset.id
             this.selectedCruise = this.selectedClubCruisesArray
-                .find(({ id }) => id == selectedCruiseId)
+                .find(({ id }) => id == selectedCruiseId);
+            
+            let updatedCruise = { ...this.selectedCruise };
 
-            this.selectedCruise.accountId = this.account.Id
+            updatedCruise.accountId = this.account.Id;
+            this.selectedCruise = updatedCruise;
+            this.showBookCruiseModal = true;
         }
     }
 

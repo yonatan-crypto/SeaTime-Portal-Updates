@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>ErevSukot2__c</fullName>
-    <label>ערב סוכות 2</label>
-    <required>false</required>
-    <trackTrending>false</trackTrending>
-    <type>Date</type>
-</CustomField>

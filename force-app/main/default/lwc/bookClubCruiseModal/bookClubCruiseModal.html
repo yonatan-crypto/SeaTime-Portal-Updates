@@ -13,7 +13,12 @@
         </template>
         <template lwc:elseif={selectedCruise.isBookingNotAvailable}>
             <p class="booking-confirmation-verbiage" dir="rtl">
-                {reachOutToClub}
+                <template lwc:if={selectedCruise.bookingNotAvailableReason}>
+                    {selectedCruise.bookingNotAvailableReason}
+                </template>
+                <template lwc:else>
+                    {reachOutToClub}
+                </template>
             </p>
         </template>
         <template lwc:else>

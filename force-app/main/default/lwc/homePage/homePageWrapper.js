@@ -49,8 +49,8 @@ export default class Wrapper {
     wrapPastClubCruises(pastCruises) {
         if (!pastCruises) return [];
         return pastCruises.map(pc => {
-            const startDate = pc.Cruise__r?.Start_Date__c;
-            const endDate = pc.Cruise__r?.End_Date__c;
+            const startDate = pc.startDate;
+            const endDate = pc.endDate;
             
             let displayDate = '';
             let displayTime = '';
@@ -71,10 +71,10 @@ export default class Wrapper {
                 Id: pc.Id,
                 displayDate: displayDate,
                 displayTime: displayTime,
-                boatName: pc.Cruise__r?.Boat__r?.Name || '',
-                SailType__c: pc.SailType__c || '',
-                additionalInfo: pc.Cruise__r?.Additional_Info__c || '',
-                status: pc.Status__c
+                boatName: pc.boatName || '',
+                sailingTypeLabel: pc.sailingType === 'Private' ? 'פרטית' : 'מודרכת',
+                additionalInfo: pc.additionalInfo || '',
+                status: pc.status
             };
         });
     }

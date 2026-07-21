@@ -15,10 +15,7 @@
                 <div class="slds-backdrop slds-backdrop_open" role="presentation"></div>
             </template>
 
-                <template lwc:if={selectedBoat.isdisable}>
-                    <p class="boat-certificate-required">{boatRequiresCertificate} </p>
-                </template>
-                <template lwc:elseif={boatReserved}>
+                <template lwc:if={boatReserved}>
                     <p class="booking-confirmation-verbiage" dir="rtl">
                         {boatReserved}
                     </p>
@@ -43,16 +40,28 @@
                                 <p>{cruiseValue}</p>
                             </div>
                         </section>
-                        <div dir={dir}>
-                            <lightning-input type="text" label={additionalInfo} onchange={handleInput} placeholder={aiPlaceHolder} max-length=255 ></lightning-input>
-                        </div>
+                        <template lwc:if={selectedBoat.blockReason}>
+                            <p class="booking-confirmation-verbiage slds-text-color_error slds-m-top_medium" dir="rtl">
+                                {selectedBoat.blockReason}
+                            </p>
+                        </template>
+                        <template lwc:else>
+                            <template lwc:if={selectedBoat.isdisable}>
+                                <p class="booking-confirmation-verbiage slds-text-color_error slds-m-bottom_small" dir="rtl">
+                                    אין לך הסמכה על היאכטה, ביכולתך להזמין הפלגה בליווי מדריך (בתוספת תשלום לפי מחירון המועדון)
+                                </p>
+                            </template>
+                            <div dir={dir} class="slds-m-bottom_small">
+                                <lightning-input type="checkbox" label={needSkipperLabel} checked={needSkipper} disabled={selectedBoat.isdisable} onchange={handleNeedSkipperChange}></lightning-input>
+                            </div>
+                            <div dir={dir}>
+                                <lightning-input type="text" label={additionalInfo} onchange={handleInput} placeholder={aiPlaceHolder} max-length=255 ></lightning-input>
+                            </div>
+                        </template>
                     </template> 
                  <section class="footer-section" dir={dir}>
-                    <template lwc:if={selectedBoat.isdisable}>
-                        <button class="slds-button slds-button_brand moderate-button search-button"
-                            onclick={handleNavigateToCertificates}>
-                            {certificate}
-                        </button>
+                    <template lwc:if={selectedBoat.blockReason}>
+                        <!-- Hide confirm button if blocked -->
                     </template>
                     <template lwc:else>
                         <button if:false={boatReserved} class="slds-button slds-button_brand moderate-button search-button" onclick={handleApprove}>

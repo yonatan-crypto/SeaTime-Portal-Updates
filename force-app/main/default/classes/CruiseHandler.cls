@@ -42,7 +42,7 @@ public without sharing class CruiseHandler {
         }
     }
     public void CalculateExtraHours(List < Cruise__c > newList, Set <String> statchanged) {
-        String clubrectype = [select id from RecordType where Name = 'Club'
+        String clubrectype = [select id from RecordType where DeveloperName = 'Club'
                               and SobjectType = 'Cruise__c'
                              ].id;
         Set < String > transids = new Set < String > ();
@@ -60,7 +60,7 @@ public without sharing class CruiseHandler {
                                                                                                           Order by Start__c) from PriceList__c Where Type__c = 'רגיל'
                                                Order by Start_Date__c DESC
                                               ];
-        Map < String, Transaction__c > trans = new Map < String, Transaction__c > ([select id, Date_of_Transaction__c from Transaction__c where RecordType.Name = 'נקודות'
+        Map < String, Transaction__c > trans = new Map < String, Transaction__c > ([select id, Date_of_Transaction__c from Transaction__c where RecordType.DeveloperName = 'Points'
                                                                                     and id in: transids
                                                                                    ]);
         DateTime startDate;
@@ -152,7 +152,7 @@ public without sharing class CruiseHandler {
         if(oldmoved.size()>0)   upOldVals(oldmoved);
     }
     public void upOldVals(List <Cruise__c> oldcrs){
-        String clubrectype = [select id from RecordType where Name = 'Club'
+        String clubrectype = [select id from RecordType where DeveloperName = 'Club'
                               and SobjectType = 'Cruise__c'
                              ].id;
         Set <String> ccmsids = new Set <String>();
@@ -161,7 +161,7 @@ public without sharing class CruiseHandler {
         for (Cruise__c crs: oldcrs)
             if (crs.Transaction__c != null && crs.RecordTypeid == clubrectype) transids.add(crs.Transaction__c);
         else if(crs.RecordTypeid != clubrectype) ccmsids.add(crs.id);
-        Map < String, Transaction__c > trans = new Map < String, Transaction__c > ([select id, Date_of_Transaction__c from Transaction__c where RecordType.Name = 'נקודות'
+        Map < String, Transaction__c > trans = new Map < String, Transaction__c > ([select id, Date_of_Transaction__c from Transaction__c where RecordType.DeveloperName = 'Points'
                                                                                     and id in: transids
                                                                                    ]);
         transchanged.addAll(trans.keySet());

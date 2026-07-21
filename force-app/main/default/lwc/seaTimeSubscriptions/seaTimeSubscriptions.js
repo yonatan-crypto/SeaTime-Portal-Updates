@@ -102,9 +102,9 @@ export default class SeaTimeSubscriptions extends LightningElement {
         const activeSub = transList.length > 0 ? transList[0] : null;
         const activeSubId = activeSub ? activeSub.Id : null;
 
-        // Filter cruises and co-cruises by active subscription ID if possible
+        // Filter cruises and co-cruises by active subscription ID if possible and exclude Canceled status
         const cruises = (item.Cruises__r || [])
-            .filter(c => !activeSubId || c.Transaction__c === activeSubId)
+            .filter(c => (!activeSubId || c.Transaction__c === activeSubId) && c.Status__c !== 'Canceled')
             .map(c => ({
             ...c,
             startDate: this.formatDate(c.Start_Date__c),
@@ -115,7 +115,7 @@ export default class SeaTimeSubscriptions extends LightningElement {
         }));
 
         const coCruises = (item.Co_Cruise_Sailres__r || [])
-            .filter(c => !activeSubId || c.Transaction__c === activeSubId)
+            .filter(c => (!activeSubId || c.Transaction__c === activeSubId) && c.Status__c !== 'Canceled' && (!c.Cruise__r || c.Cruise__r.Status__c !== 'Canceled'))
             .map(c => ({
             ...c,
             cruiseDate: this.formatDate(c.Date__c),

@@ -29,12 +29,20 @@ export default class BookPrivateBoatModal extends LightningElement {
     boatRequiresCertificate
     additionalInfo
     aiPlaceHolder
+    needSkipperLabel
+    needSkipper = false
     dir = DIR;
     
     constructor() {
         super()
         verbiages = new Verbiages(this)
         verbiages.loadBookPrivateBoatVerbiages()
+    }
+
+    connectedCallback() {
+        if (this.selectedBoat && this.selectedBoat.isdisable) {
+            this.needSkipper = true;
+        }
     }
 
   @api
@@ -51,13 +59,17 @@ export default class BookPrivateBoatModal extends LightningElement {
     handleInput(event) {
         this.additionalInput = event.target.value;
     }
+    
+    handleNeedSkipperChange(event) {
+        this.needSkipper = event.target.checked;
+    }
     handleCloseModal() {
         this.dispatchEvent(new CustomEvent('close'))
     }
 
     handleApprove() {
         this.showSpinner = true
-        this.dispatchEvent(new CustomEvent('approve', { detail: { additionalInput: this.additionalInput } }));
+        this.dispatchEvent(new CustomEvent('approve', { detail: { additionalInput: this.additionalInput, needSkipper: this.needSkipper } }));
     }
 
     handleNavigateToCertificates() {

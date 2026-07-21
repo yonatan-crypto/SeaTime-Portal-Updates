@@ -1,5 +1,5 @@
 @suppresswarnings('pmd.CognitiveComplexity')
-public class CoCruiseTriggerHandler {
+public without sharing class CoCruiseTriggerHandler {
   public static Boolean byPassTrigger = false;
   public static void handleCoCruiseTrigger(
     System.TriggerOperation operationType
@@ -39,10 +39,10 @@ public class CoCruiseTriggerHandler {
     }
 
     List<Transaction__c> pointsTrans = [
-      SELECT Id, Date_of_Transaction__c, Name, Type__c, Account_Name__c
+      SELECT Id, Date_of_Transaction__c, Name, Type__c, Account_Name__c, Active__c
       FROM Transaction__c
       WHERE Account_Name__c IN :accids AND RecordType.Name = 'נקודות'
-      ORDER BY Account_Name__c, Date_of_Transaction__c DESC
+      ORDER BY Account_Name__c, Active__c DESC, Date_of_Transaction__c DESC
     ];
     Map<String, String> transbyacc = new Map<String, String>();
     for (Transaction__c tran : pointsTrans) {
@@ -117,19 +117,40 @@ public class CoCruiseTriggerHandler {
     );
     Map<String, Cruise__c> crs = new Map<String, Cruise__c>(
       [
-        SELECT
-          id,
-          Boat__c,
-          RecordType.Name,
-          Holiday__c,
-          Start_Date__c,
-          End_Date__c
-        FROM Cruise__c
+        SELECT id, Boat__c, RecordType.Name, Holiday__c, Start_Date__c, End_Date__c, type_of_enriching__c 
+        FROM Cruise__c 
         WHERE id IN :crsbytran.values()
       ]
     );
+
+    // Get Student status from Accounts
+    Set<Id> allAccIds = new Set<Id>();
+    for (Co_Cruise_Members__c ccm : cruiseMembersList) {
+        if (ccm.Account_Co__c != null) allAccIds.add(ccm.Account_Co__c);
+    }
+    Map<Id, Account> studentAccMap = new Map<Id, Account>([SELECT Id, StudentMeshit30__c FROM Account WHERE Id IN :allAccIds]);
+
     for (Co_Cruise_Members__c ccm : cruiseMembersList) {
       ccm.Cruise_Points__c = 0;
+      
+      // NEW LOGIC: If student, they pay 0 points ONLY for School/Theory cruises
+      Account memberAcc = studentAccMap.get(ccm.Account_Co__c);
+      if (memberAcc != null && memberAcc.StudentMeshit30__c == true) {
+          Cruise__c cruiseRecord = crs.get(ccm.Cruise__c);
+          if (cruiseRecord != null) {
+              String rtName = cruiseRecord.RecordType.Name;
+              String typeOfEnriching = cruiseRecord.type_of_enriching__c;
+              String rawType = typeOfEnriching != null ? typeOfEnriching.trim().toLowerCase() : '';
+              Boolean isSchoolOrTheory = (rtName == 'Enriching' || rtName == 'העשרה') && 
+                  (rawType == 'בית ספר' || rawType == 'school' || rawType == 'lesson' || rawType == 'תאוריה' || rawType == 'theory');
+              
+              if (isSchoolOrTheory) {
+                  ccm.Cruise_Points__c = 0;
+                  continue; 
+              }
+          }
+      }
+
       if (
         ccm.Cruise__c != null &&
         ccm.Transaction__c != null &&
@@ -215,10 +236,10 @@ public class CoCruiseTriggerHandler {
     }
 
     List<Transaction__c> pointsTrans = [
-      SELECT Id, Date_of_Transaction__c, Name, Type__c, Account_Name__c
+      SELECT Id, Date_of_Transaction__c, Name, Type__c, Account_Name__c, Active__c
       FROM Transaction__c
       WHERE Account_Name__c IN :accids AND RecordType.Name = 'נקודות'
-      ORDER BY Account_Name__c, Date_of_Transaction__c DESC
+      ORDER BY Account_Name__c, Active__c DESC, Date_of_Transaction__c DESC
     ];
     Map<String, String> transbyacc = new Map<String, String>();
     for (Transaction__c tran : pointsTrans) {
@@ -251,7 +272,8 @@ public class CoCruiseTriggerHandler {
       ));
       if (
         oldccm.Cruise__c != ccm.Cruise__c ||
-        oldccm.Transaction__c != ccm.Transaction__c
+        oldccm.Transaction__c != ccm.Transaction__c ||
+        oldccm.Status__c != ccm.Status__c
       ) {
         if (oldccm.Transaction__c != null) {
           transchanged.add(oldccm.Transaction__c);
@@ -305,19 +327,40 @@ public class CoCruiseTriggerHandler {
     );
     Map<String, Cruise__c> crs = new Map<String, Cruise__c>(
       [
-        SELECT
-          id,
-          Boat__c,
-          RecordType.Name,
-          Holiday__c,
-          Start_Date__c,
-          End_Date__c
-        FROM Cruise__c
+        SELECT id, Boat__c, RecordType.Name, Holiday__c, Start_Date__c, End_Date__c, type_of_enriching__c 
+        FROM Cruise__c 
         WHERE id IN :crsbytran.values()
       ]
     );
+
+    // Get Student status from Accounts
+    Set<Id> allAccIdsUpdate = new Set<Id>();
+    for (Co_Cruise_Members__c ccm : cruiseMembersList) {
+        if (ccm.Account_Co__c != null) allAccIdsUpdate.add(ccm.Account_Co__c);
+    }
+    Map<Id, Account> studentAccMapUpdate = new Map<Id, Account>([SELECT Id, StudentMeshit30__c FROM Account WHERE Id IN :allAccIdsUpdate]);
+
     for (Co_Cruise_Members__c ccm : cruiseMembersList) {
      // ccm.Cruise_Points__c = 0;
+     
+      // NEW LOGIC: If student, they pay 0 points ONLY for School/Theory cruises
+      Account memberAcc = studentAccMapUpdate.get(ccm.Account_Co__c);
+      if (memberAcc != null && memberAcc.StudentMeshit30__c == true) {
+          Cruise__c cruiseRecord = crs.get(ccm.Cruise__c);
+          if (cruiseRecord != null) {
+              String rtName = cruiseRecord.RecordType.Name;
+              String typeOfEnriching = cruiseRecord.type_of_enriching__c;
+              String rawType = typeOfEnriching != null ? typeOfEnriching.trim().toLowerCase() : '';
+              Boolean isSchoolOrTheory = (rtName == 'Enriching' || rtName == 'העשרה') && 
+                  (rawType == 'בית ספר' || rawType == 'school' || rawType == 'lesson' || rawType == 'תאוריה' || rawType == 'theory');
+              
+              if (isSchoolOrTheory) {
+                  ccm.Cruise_Points__c = 0;
+                  continue; 
+              }
+          }
+      }
+
       if (
         ccm.Cruise__c != null &&
         ccm.Transaction__c != null &&

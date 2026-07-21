@@ -41,8 +41,10 @@ export default class Service {
         rawMembership = scan(trans);
         if (!rawMembership) rawMembership = scan(acc);
 
-        const isFullClub = rawMembership.includes('פרטיות') || rawMembership.includes('חבר מועדון');
-        const isGuidedOnly = rawMembership.includes('מודרכות בלבד') || rawMembership.includes('guided only');
+        const isActiveSub = main.transaction && main.transaction.Active__c === true;
+
+        const isFullClub = isActiveSub && (rawMembership.includes('פרטיות') || rawMembership.includes('חבר מועדון'));
+        const isGuidedOnly = isActiveSub && (rawMembership.includes('מודרכות בלבד') || rawMembership.includes('guided only'));
         const isStudent = main.account?.StudentMeshit30__c === true;
 
         // Cleanup Debug Info
@@ -158,7 +160,9 @@ export default class Service {
         if(Array.isArray(main.clubCruisesArray) && (main.clubCruisesArray).length){
             main.clubCruisesArray.forEach(clubCruise => {
             clubCruise.price = this.getBoatPrice(clubCruise.boatId, clubCruise.formattedStartTime, clubCruise.recordTypeName);
-            clubCruise.isBookingNotAvailable = this.bookingNotAvailable(clubCruise.price, clubCruise.startDate);
+            let status = this.getBookingStatus(clubCruise.price, clubCruise.startDate, clubCruise.recordTypeName, clubCruise.typeOfEnriching);
+            clubCruise.isBookingNotAvailable = !status.isAvailable;
+            clubCruise.bookingNotAvailableReason = status.reason;
             clubCruise.searchTileSelector = this.searchTileSelector(clubCruise.isBookingNotAvailable);
             })
         }
@@ -180,43 +184,34 @@ export default class Service {
             })
     }
 
-    bookingNotAvailable(boatPrice, startDate) {
-        // Student check: use explicitly passed isStudentUser flag (more reliable than account field timing)
+    getBookingStatus(boatPrice, startDate, recordTypeName, typeOfEnriching) {
+        const rawType = (typeOfEnriching || '').trim().toLowerCase();
+        const isSchoolOrTheory = (recordTypeName === 'Enriching' || recordTypeName === 'העשרה') && (rawType === 'בית ספר' || rawType === 'school' || rawType === 'lesson' || rawType === 'תאוריה' || rawType === 'theory');
+
         const isStudent = main.isStudentUser === true;
+        if (isStudent && isSchoolOrTheory) return { isAvailable: true, reason: '' };
 
-        // Students can always book guided/friends cruises (no subscription needed)
-        if (isStudent) return false;
-
-        if (!main.transaction || !main.transaction.Active__c) return true;
-
-        const membership = (main.transaction?.type_of_membership__c || '').trim();
-        const isGuidedOnly = membership.includes('מודרכות בלבד');
-        const isFullClub = membership.includes('חבר מועדון כולל פרטיות');
-
-        // Students have no limitations (belt-and-suspenders)
-        if (isStudent) return false;
-
-        // 2. Logic for "Guided Only" and "Full Club Including Private"
-        if (isGuidedOnly || isFullClub) {
-            const endDateStr = main.transaction?.End_Date__c;
-            let isExpired = false;
-            if (endDateStr && startDate) {
-                isExpired = new Date(startDate) > new Date(endDateStr);
-            }
-            const hasPoints = (main.transaction.Points_Balance__c || 0) >= (boatPrice || 0);
-
-            return isExpired || !hasPoints;
+        if (!main.transaction || !main.transaction.Active__c) {
+            return { isAvailable: false, reason: 'המנוי שלך אינו בתוקף' };
         }
 
-        // 3. For any other membership types, we default to the point/expiry check for safety
+        if (main.transaction.Club_Contract__c === false) {
+            return { isAvailable: false, reason: 'יש לחתום על תקנון המועדון על מנת להזמין את ההפלגה' };
+        }
+
         const endDateStr = main.transaction?.End_Date__c;
-        let isExpired = false;
         if (endDateStr && startDate) {
-            isExpired = new Date(startDate) > new Date(endDateStr);
+            if (new Date(startDate) > new Date(endDateStr)) {
+                return { isAvailable: false, reason: 'המנוי שלך אינו בתוקף לתאריך ההפלגה' };
+            }
         }
+
         const hasPoints = (main.transaction.Points_Balance__c || 0) >= (boatPrice || 0);
-        
-        return isExpired || !hasPoints;
+        if (!hasPoints) {
+            return { isAvailable: false, reason: 'אין מספיק נקודות במנוי עבור הפלגה זו' };
+        }
+
+        return { isAvailable: true, reason: '' };
     }
 
 

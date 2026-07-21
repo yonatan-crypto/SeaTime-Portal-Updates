@@ -13,6 +13,7 @@ import FORM_FACTOR from '@salesforce/client/formFactor'
 import HomePageIcons from '@salesforce/resourceUrl/HomePageIcons'
 import Service from './homePageService'
 import getHomePageTabsData from '@salesforce/apex/HomePageController.getHomePageTabsData'
+import getPastSailings from '@salesforce/apex/HomePageController.getPastSailings'
 import Wrapper from './homePageWrapper'
 import CharterComingSoon from '@salesforce/resourceUrl/CharterComingSoon'
 import cancelCoCruiseSailres from '@salesforce/apex/SeaTimeController.cancelCoCruiseSailres'
@@ -57,6 +58,8 @@ export default class HomePage extends LightningElement {
 
     @track pastClubCruises = []
     @track isPastCruisesOpen = false
+    @track showShowAllPastButton = false
+    @track hasLoadedAllPast = false
 
     get showSubscriptionButton() {
         // Show only if there's an active club membership transaction
@@ -109,6 +112,18 @@ export default class HomePage extends LightningElement {
         return this.account?.StudentMeshit30__c === true;
     }
 
+    get isClubBookingDisabled() {
+        const isStudent = this.account?.StudentMeshit30__c === true;
+        const isActive = this.transaction?.Active__c === true;
+        
+        if (isStudent || isActive) return false;
+        return true;
+    }
+
+    get clubBookingButtonClass() {
+        return this.isClubBookingDisabled ? 'cta-button cta-button-disabled' : 'cta-button';
+    }
+
     get isPrivateBookingDisabled() {
         const isStudent = this.account?.StudentMeshit30__c === true;
         const membership = (this.transaction?.type_of_membership__c || '').trim();
@@ -126,10 +141,6 @@ export default class HomePage extends LightningElement {
 
         // Standard logic for non-students
         if (isActive && isFullClub) return false;
-
-        // If they have existing private cruises, allow them to see the page (to view/cancel)
-        const hasExistingPrivateCruises = this.privateReservationArray && this.privateReservationArray.length > 0;
-        if (hasExistingPrivateCruises) return false;
 
         return true;
     }
@@ -222,6 +233,7 @@ export default class HomePage extends LightningElement {
             this.transaction = transaction
             this.cruiseRecordsArray = cruiseRecordsArray
             this.pastClubCruises = wrapper.wrapPastClubCruises(pastClubCruises)
+            this.showShowAllPastButton = this.transaction != null;
 
             wrapper.wrapCruiseRecordsArray()
         } catch (error) {
@@ -246,6 +258,19 @@ export default class HomePage extends LightningElement {
 
         await service.highlightSelectedTab('refresh')
         await service.highlightSelectedTab(selectedNavigationItem)
+    }
+
+    async handleShowAllPastCruises() {
+        try {
+            this.showSpinner = true;
+            const pastClubCruises = await getPastSailings({ accountId: this.accountId, allPast: true });
+            this.pastClubCruises = wrapper.wrapPastClubCruises(pastClubCruises);
+            this.hasLoadedAllPast = true;
+        } catch (error) {
+            console.error('Error loading all past cruises', error);
+        } finally {
+            this.showSpinner = false;
+        }
     }
 
     handleNavigateToDashboard() {

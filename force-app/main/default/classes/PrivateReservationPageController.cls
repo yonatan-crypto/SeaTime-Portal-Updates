@@ -29,6 +29,7 @@ public without sharing class PrivateReservationPageController {
         string endTime            = (string) selectedBoat.get('endTime');
         id boatId                 = (id) selectedBoat.get('boatId');
         id accountId              = (id) selectedBoat.get('accountId');
+        Boolean needSkipper       = selectedBoat.containsKey('needSkipper') ? (Boolean) selectedBoat.get('needSkipper') : false;
         Transaction__c transationRec = selector.getTransactionFromAccount(accountId);
         RecordType recordType     = selector.getRecordTypeFromName('Club');
         id recordTypeId           = recordType.Id;
@@ -47,6 +48,7 @@ public without sharing class PrivateReservationPageController {
         cruise.AccountName__c     = accountId;
         cruise.Transaction__c     = transationRec.Id;
         cruise.Additional_Info__c = additionalInfo;
+        cruise.need_skipper__c    = needSkipper;
         cruise.Status__c = transationRec.Id !=null && transationRec.Active__c ?  System.Label.CruiseApproavalStatus : System.Label.For_Payment;
         system.debug('cruise'+cruise+'transationRec=== '+transationRec);
         insert cruise;

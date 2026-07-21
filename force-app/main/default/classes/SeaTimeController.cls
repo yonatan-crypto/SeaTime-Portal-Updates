@@ -21,19 +21,18 @@ public without sharing class SeaTimeController {
             result.put('name', acc.Name);
             result.put('StudentMeshit30__c', acc.StudentMeshit30__c);
             
-            // Direct query
+            // Direct query for transactions
             List<Transaction__c> transactions = [SELECT Id, Name, Extra_Subscription_Details__c, Active__c, Start_Date__c, End_Date__c, Total_Points__c, Used_Points__c, Points_Balance__c 
                                                 FROM Transaction__c 
                                                 WHERE Account_Name__c = :accountId 
                                                 ORDER BY Active__c DESC, CreatedDate DESC];
             result.put('Account__r', transactions);
-            result.put('debug_trans_count', transactions.size());
             
             // Cruises
             List<Cruise__c> cruises = [SELECT Id, Transaction__c, Start_Date__c, End_Date__c, Cruise_Points__c, Active_Total_Hours__c, Boat__r.Name, Status__c 
                                       FROM Cruise__c 
                                       WHERE AccountName__c = :accountId 
-                                      ORDER BY Start_Date__c];
+                                      ORDER BY Start_Date__c DESC];
             result.put('Cruises__r', cruises);
                                       
             // Guided Cruises
@@ -41,7 +40,7 @@ public without sharing class SeaTimeController {
                                                        FROM Co_Cruise_Members__c 
                                                        WHERE Account_Co__c = :accountId 
                                                        AND Cruise__c != null 
-                                                       ORDER BY Date__c];
+                                                       ORDER BY Cruise__r.Start_Date__c DESC];
             result.put('Co_Cruise_Sailres__r', guidedCruises);
             
             return JSON.serialize(result);
@@ -91,9 +90,9 @@ public without sharing class SeaTimeController {
     }
 
     @AuraEnabled
-    public static String calculateCruisePrice(Object cruiseRec) {
+    public static Decimal calculateCruisePrice(Object cruiseRec) {
         try {
-            if (cruiseRec == null) return 'Error: cruiseRec is null';
+            if (cruiseRec == null) return 0;
 
             String jsonStr = JSON.serialize(cruiseRec);
             Map<String, Object> cruiseMap = (Map<String, Object>)JSON.deserializeUntyped(jsonStr);
@@ -104,43 +103,39 @@ public without sharing class SeaTimeController {
             Boolean isHoliday = (Boolean)cruiseMap.get('Holiday__c');
             Id transactionId = (Id)cruiseMap.get('Transaction__c');
 
-            if (boatId == null) return 'Error: Boat__c is null';
-            if (startObj == null || endObj == null) return 'Error: Start/End Date is null';
+            if (boatId == null || startObj == null || endObj == null) return 0;
 
             DateTime startTime;
             DateTime endTime;
 
-            try {
-                if (startObj instanceof String) {
-                    startTime = (DateTime)JSON.deserialize('"' + (String)startObj + '"', DateTime.class);
-                } else {
-                    startTime = (DateTime)JSON.deserialize(JSON.serialize(startObj), DateTime.class);
-                }
-
-                if (endObj instanceof String) {
-                    endTime = (DateTime)JSON.deserialize('"' + (String)endObj + '"', DateTime.class);
-                } else {
-                    endTime = (DateTime)JSON.deserialize(JSON.serialize(endObj), DateTime.class);
-                }
-            } catch (Exception e) {
-                return 'Error parsing dates: ' + e.getMessage() + ' | Start: ' + startObj;
+            if (startObj instanceof String) {
+                startTime = (DateTime)JSON.deserialize('"' + (String)startObj + '"', DateTime.class);
+            } else {
+                startTime = (DateTime)JSON.deserialize(JSON.serialize(startObj), DateTime.class);
             }
 
-            if (startTime == null || endTime == null) return 'Error: Parsed dates are null';
+            if (endObj instanceof String) {
+                endTime = (DateTime)JSON.deserialize('"' + (String)endObj + '"', DateTime.class);
+            } else {
+                endTime = (DateTime)JSON.deserialize(JSON.serialize(endObj), DateTime.class);
+            }
+
+            if (startTime == null || endTime == null) return 0;
 
             Date dt = startTime.date();
             
+            // 1. Try Sale PriceLists
             List<PriceList__c> dispricelists = [SELECT Id, Price__c, Start_Date__c, End_Date__c, 
                                                (SELECT Id, Start__c, Type__c, Boat__c, Price__c, HPrice__c, Global__c FROM PriceListLines__r ORDER BY Start__c) 
                                                FROM PriceList__c WHERE Type__c = 'מבצע' ORDER BY Start_Date__c DESC];
             
             for (PriceList__c pl : dispricelists) {
                 if (pl.Start_Date__c <= dt && (pl.End_Date__c == null || pl.End_Date__c >= dt)) {
-                    Decimal pts = TransactionPoints.getPTS('Club', boatId, isHoliday == true || isWeekend(dt), pl.PriceListLines__r, pl.Price__c, startTime, endTime);
-                    return String.valueOf(pts);
+                    return TransactionPoints.getPTS('Club', boatId, isHoliday == true || isWeekend(dt), pl.PriceListLines__r, pl.Price__c, startTime, endTime);
                 }
             }
 
+            // 2. Try Regular PriceLists based on Transaction Date
             Date transDate = dt;
             if (transactionId != null) {
                 List<Transaction__c> transList = [SELECT Date_of_Transaction__c FROM Transaction__c WHERE Id = :transactionId LIMIT 1];
@@ -151,24 +146,21 @@ public without sharing class SeaTimeController {
                                                (SELECT Id, Start__c, Type__c, Boat__c, Price__c, HPrice__c, Global__c FROM PriceListLines__r ORDER BY Start__c) 
                                                FROM PriceList__c WHERE Type__c = 'רגיל' ORDER BY Start_Date__c DESC];
             
-            if (regpricelists.isEmpty()) return 'Error: No regular price lists found';
-
             for (PriceList__c pl : regpricelists) {
                 if (pl.Start_Date__c <= transDate && (pl.End_Date__c == null || pl.End_Date__c >= transDate)) {
-                    Decimal pts = TransactionPoints.getPTS('Club', boatId, isHoliday == true || isWeekend(dt), pl.PriceListLines__r, pl.Price__c, startTime, endTime);
-                    return String.valueOf(pts);
+                    return TransactionPoints.getPTS('Club', boatId, isHoliday == true || isWeekend(dt), pl.PriceListLines__r, pl.Price__c, startTime, endTime);
                 }
             }
 
-            return 'Error: No matching price list found for date ' + dt;
+            return 0;
         } catch (Exception e) {
-            return 'General Error: ' + e.getMessage() + ' | ' + e.getStackTraceString();
+            return 0;
         }
     }
 
     private static Boolean isWeekend(Date dt) {
         Date startOfWeek = dt.toStartOfWeek();
         Integer dayDiff = startOfWeek.daysBetween(dt);
-        return dayDiff == 5 || dayDiff == 6;
+        return dayDiff == 5 || dayDiff == 6; // Friday or Saturday
     }
 }

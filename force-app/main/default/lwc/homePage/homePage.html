@@ -26,7 +26,7 @@
                 <div class="dashboard-container">
                     <div class="dashboard-buttons">
                         <button class={privateBookingButtonClass} onclick={handleDashboardBookPrivate} id="book-private-btn" disabled={isPrivateBookingDisabled}>הזמנת הפלגה פרטית</button>
-                        <button class="cta-button" onclick={handleDashboardJoinClub} id="join-club-btn">הרשמה להפלגה מודרכת</button>
+                        <button class={clubBookingButtonClass} onclick={handleDashboardJoinClub} id="join-club-btn" disabled={isClubBookingDisabled}>הרשמה להפלגה מודרכת</button>
                         <button class="cta-button logout-btn" onclick={handleLogout} id="dashboard-logout-btn">
                             <lightning-icon icon-name="utility:logout" size="x-small" class="slds-m-right_small" variant="inverse"></lightning-icon>
                             יציאה
@@ -186,18 +186,26 @@
                         <!-- Past Guided Cruises Section -->
                         <div class="past-cruises-container slds-m-top_xx-large">
                             <button class="collapsible-header" onclick={togglePastCruises}>
-                                <span class="header-text">היסטוריית הפלגות מודרכות (הפלגות עבר)</span>
+                                <span class="header-text">היסטוריית הפלגות (הפלגות עבר)</span>
                                 <lightning-icon icon-name={pastCruisesIcon} size="x-small" class="slds-m-left_small" variant="brand"></lightning-icon>
                             </button>
                             
                             <template lwc:if={isPastCruisesOpen}>
                                 <div class="past-cruises-content slds-m-top_medium">
+                                    <template lwc:if={showShowAllPastButton}>
+                                        <div class="slds-text-align_center slds-m-bottom_medium">
+                                            <button class="slds-button slds-button_outline-brand" onclick={handleShowAllPastCruises} disabled={hasLoadedAllPast}>
+                                                הצגת כל ההפלגות בעבר
+                                            </button>
+                                        </div>
+                                    </template>
                                     <template lwc:if={pastClubCruises.length}>
                                         <table class="dashboard-table past-table">
                                             <thead>
                                                 <tr>
                                                     <th>תאריך הפלגה</th>
                                                     <th>שעות הפלגה</th>
+                                                    <th>סוג הפלגה</th>
                                                     <th>סירה</th>
                                                     <th>מידע נוסף</th>
                                                 </tr>
@@ -207,6 +215,7 @@
                                                     <tr key={pc.Id}>
                                                         <td>{pc.displayDate}</td>
                                                         <td>{pc.displayTime}</td>
+                                                        <td>{pc.sailingTypeLabel}</td>
                                                         <td>{pc.boatName}</td>
                                                         <td>{pc.additionalInfo}</td>
                                                     </tr>
@@ -221,6 +230,9 @@
                                                     <div class="card-row">
                                                         <div class="card-item"><span class="label">תאריך:</span> {pc.displayDate}</div>
                                                         <div class="card-item"><span class="label">שעה:</span> {pc.displayTime}</div>
+                                                    </div>
+                                                    <div class="card-row">
+                                                        <div class="card-item"><span class="label">סוג הפלגה:</span> {pc.sailingTypeLabel}</div>
                                                     </div>
                                                     <div class="card-row">
                                                         <div class="card-item"><span class="label">סירה:</span> {pc.boatName}</div>

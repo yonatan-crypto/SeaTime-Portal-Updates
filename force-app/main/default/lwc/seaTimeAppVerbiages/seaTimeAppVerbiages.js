@@ -190,6 +190,7 @@ export default class SeaTimeAppVerbiages {
         main.confirm = Confirm
         main.cancel = CancelLabel
         main.certificate = certificate
+        main.needSkipperLabel = 'זקוק לסקיפר (בתוספת תשלום לפי מחירון המועדון)';
         
         main.boatRequiresCertificate = boatRequiresCertificate;
     }

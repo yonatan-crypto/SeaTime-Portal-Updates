@@ -228,6 +228,18 @@ export default class PrivateReservationPage extends LightningElement {
             let selectedBoat = await this.populateSelectedBoat(dataset);
             selectedBoat.formattedDate = service.formatDate(selectedBoat.date);
             
+            let blockReason = null;
+            if (!transDetails || !transDetails.Active__c) {
+                blockReason = 'המנוי שלך אינו בתוקף';
+            } else if (transDetails.Club_Contract__c === false) {
+                blockReason = 'יש לחתום על תקנון המועדון על מנת להזמין את ההפלגה';
+            } else if (transDetails.End_Date__c && selectedBoat.date && new Date(selectedBoat.date) > new Date(transDetails.End_Date__c)) {
+                blockReason = 'המנוי שלך אינו בתוקף לתאריך ההפלגה';
+            } else if ((transDetails.Points_Balance__c || 0) < (selectedBoat.price || 0)) {
+                blockReason = 'אין מספיק נקודות במנוי עבור הפלגה זו';
+            }
+            selectedBoat.blockReason = blockReason;
+            
             this.showBookBoatModal = true;
             this.boatReserved = undefined;
             this.selectedBoat = selectedBoat;
@@ -272,6 +284,7 @@ export default class PrivateReservationPage extends LightningElement {
     async handleApprovePrivateReservation(event) {
         let inputText = event.detail.additionalInput;
         this.selectedBoat.additionalInput = inputText;
+        this.selectedBoat.needSkipper = event.detail.needSkipper;
         try {
             const reservedData = await createPrivateReservation({ selectedBoat: this.selectedBoat });
             this.boatReserved = reservedData.startsWith('a04') ? undefined : reservedData;

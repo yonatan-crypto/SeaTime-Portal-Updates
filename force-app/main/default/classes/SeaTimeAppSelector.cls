@@ -6,14 +6,6 @@
 
 public without sharing class SeaTimeAppSelector {
     
-    
-    /* commente for strong password 1737
-     *
-		return [SELECT id, Phone, Login_Attempt__c, Student7Meter__c,
-                StudentMeshit30__c
-                FROM Account WHERE Email__c =: userName];
-
-	*/
     // updated part for login to strong password.
     public Account[] isValidAccountCredentials(String userName) {
         return [
@@ -29,30 +21,21 @@ public without sharing class SeaTimeAppSelector {
     ];
     }
 
-    	/* for 1737
     public Account getAccountFromId(Id accountId) {
-        return [SELECT Id, Login_Attempt__c, Code__c,
-                Student7Meter__c, StudentMeshit30__c 
-                FROM Account WHERE Id =: accountId];
-    }  */ 
-    
-    // added 1737
-    public Account getAccountFromId(Id accountId) {
+        if (accountId == null) {
+            return null;
+        }
 
-    if (accountId == null) {
-        return null;
+        List<Account> accList = [
+            SELECT Id, Login_Attempt__c, Code__c,
+                   Student7Meter__c, StudentMeshit30__c 
+            FROM Account
+            WHERE Id = :accountId
+            LIMIT 1
+        ];
+
+        return accList.isEmpty() ? null : accList[0];
     }
-
-    List<Account> accList = [
-        SELECT Id, Login_Attempt__c, Code__c,
-               Student7Meter__c, StudentMeshit30__c 
-        FROM Account
-        WHERE Id = :accountId
-        LIMIT 1
-    ];
-
-    return accList.isEmpty() ? null : accList[0];
-}
 
 
     public Cruise__c[] getRecentCruiseRecords(Id accountId) {
@@ -102,25 +85,25 @@ public without sharing class SeaTimeAppSelector {
         for(PriceListLine__c priceListLine: [SELECT id, Price__c, Start__c,Type__c, Boat__c,
                                              PriceList__r.Start_Date__c,PriceList__r.End_Date__c FROM 
                                              PriceListLine__c WHERE Type__c != 'Club' AND PriceList__r.Start_Date__c<= :minDate AND
-                                             PriceList__r.End_Date__c >= :maxDate ORDER BY PriceList__r.CreatedDate]){
+                                             (PriceList__r.End_Date__c >= :maxDate OR PriceList__r.End_Date__c = null) ORDER BY PriceList__r.CreatedDate]){
                    if(cruiseMap.containsKey(priceListLine.Type__c)){
                     for(Object cruiseObject: cruiseMap.get(priceListLine.Type__c)){
                         Map<String, Object> cruiseData = (Map<String, Object>)cruiseObject;
-    					Date cruiseStartDate = Date.valueOf((String)cruiseData.get('startDate'));
+                        Date cruiseStartDate = Date.valueOf((String)cruiseData.get('startDate'));
                         String cruiseRecordTypeName = (String)cruiseData.get('recordTypeName');
-		                String cruiseBoatId = (String)cruiseData.get('boatId');
+                        String cruiseBoatId = (String)cruiseData.get('boatId');
                         String cruiseId = (String)cruiseData.get('id');
                         Time cruiseStartTime = ((DateTime)JSON.deserialize('"' + (String)cruiseData.get('startDate') + '"', DateTime.class)).time() ;
-                        if((cruiseStartDate >= priceListLine.PriceList__r.Start_Date__c 
-                       && cruiseStartDate <= priceListLine.PriceList__r.End_Date__c) 
-                           && cruiseBoatId == priceListLine.Boat__c && cruiseRecordTypeName == priceListLine.Type__c){
+                        
+                        Boolean isDateInRange = cruiseStartDate >= priceListLine.PriceList__r.Start_Date__c && 
+                                                (priceListLine.PriceList__r.End_Date__c == null || cruiseStartDate <= priceListLine.PriceList__r.End_Date__c);
+
+                        if(isDateInRange && cruiseBoatId == priceListLine.Boat__c && cruiseRecordTypeName == priceListLine.Type__c){
                                if(!priceListLineData.containsKey(priceListLine.Type__c+cruiseStartDate+cruiseBoatId)){
                                    priceListLineData.put(priceListLine.Type__c+cruiseStartDate+cruiseBoatId+cruiseId, priceListLine);
                                }
                            }
-                           else if((cruiseStartDate >= priceListLine.PriceList__r.Start_Date__c 
-                       && cruiseStartDate <= priceListLine.PriceList__r.End_Date__c) 
-                             && (cruiseRecordTypeName == 'Friends' || cruiseRecordTypeName == 'Enriching')){
+                           else if(isDateInRange && (cruiseRecordTypeName == 'Friends' || cruiseRecordTypeName == 'Enriching')){
                                   if(!priceListLineData.containsKey(priceListLine.Type__c+cruiseStartDate+cruiseBoatId)){
                                       PriceListLine__c tempPriceListLine= new PriceListLine__c(Price__c=priceListLine.Price__c,Boat__c =cruiseBoatId,
                                                            Start__c=cruiseStartTime,Type__c=cruiseRecordTypeName);
@@ -193,11 +176,26 @@ public without sharing class SeaTimeAppSelector {
     }
 
     public Transaction__c getTransactionFromAccount(Id accountId) {
-        List<Transaction__c> transList = [SELECT id, Total_Points__c,Points_Balance__c,Active__c,Club_Contract__c, type_of_membership__c, Start_Date__c, End_Date__c FROM Transaction__c WHERE Account_Name__c  =: accountId AND type_of_membership__c != null order by createddate desc LIMIT 1];
+        List<Transaction__c> transList = [SELECT id, Total_Points__c,Points_Balance__c,Active__c,Club_Contract__c, type_of_membership__c, Start_Date__c, End_Date__c 
+                                          FROM Transaction__c 
+                                          WHERE Account_Name__c =: accountId 
+                                          AND type_of_membership__c != null 
+                                          ORDER BY Active__c DESC, CreatedDate DESC 
+                                          LIMIT 1];
         if (!transList.isEmpty()) {
             return transList[0];
         }
         return new Transaction__c();
     }
-    
+
+    public List<Co_Cruise_Members__c> getPastClubCruises(Id accountId) {
+        return [SELECT Id, Name, Date__c, Cruise__r.Name, Cruise__r.Boat__r.Name, 
+                       Cruise__r.Additional_Info__c, Status__c, SailType__c,
+                       Cruise_Points__c, Cruise__r.Start_Date__c, Cruise__r.End_Date__c
+                FROM Co_Cruise_Members__c 
+                WHERE Account_Co__c = :accountId 
+                AND Cruise__r.Start_Date__c < TODAY
+                AND Status__c != 'Canceled'
+                ORDER BY Cruise__r.Start_Date__c DESC];
+    }
 }
