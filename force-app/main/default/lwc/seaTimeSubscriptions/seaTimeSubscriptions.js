@@ -26,6 +26,13 @@ const STATUS_MAP = {
   'Pending': 'ממתין'
 };
 
+const CRUISE_TYPE_MAP = {
+    'Enriching': 'מודרכת',
+    'Friends': 'חברים',
+    'Certification': 'הסמכה',
+    'Course': 'קורס'
+};
+
 export default class SeaTimeSubscriptions extends LightningElement {
 
   labels = {
@@ -119,7 +126,7 @@ export default class SeaTimeSubscriptions extends LightningElement {
             .map(c => ({
             ...c,
             cruiseDate: this.formatDate(c.Date__c),
-            sailTypeVal: c.Cruise__r && c.Cruise__r.RecordType ? c.Cruise__r.RecordType.Name : '',
+            sailTypeVal: c.Cruise__r && c.Cruise__r.RecordType ? (CRUISE_TYPE_MAP[c.Cruise__r.RecordType.Name] || c.Cruise__r.RecordType.Name) : '',
             extraInfo: c.Cruise__r ? c.Cruise__r.Additional_Info__c : '',
             StatusCss: 'status ' + this.getStatusClass(c.Status__c)
         }));
