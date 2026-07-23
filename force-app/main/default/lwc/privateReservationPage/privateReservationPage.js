@@ -76,7 +76,17 @@ export default class PrivateReservationPage extends LightningElement {
     @track currentTime;
 
     @api privateReservationArray
-    @api accountId
+    _accountId;
+    @api 
+    get accountId() {
+        return this._accountId;
+    }
+    set accountId(value) {
+        this._accountId = value;
+        if (value) {
+            this.searchData = { ...this.searchData, accountId: value };
+        }
+    }
     @api clubCruisesArray = []
     @api initialShowSearchSection = false
     
@@ -125,6 +135,10 @@ export default class PrivateReservationPage extends LightningElement {
     }
 
     connectedCallback() {
+        this.searchData = { 
+            ...this.searchData, 
+            accountId: this.accountId || sessionStorage.getItem('accountId') 
+        };
         if (this.initialShowSearchSection) {
             this.showSearchSection = true;
         } else {
@@ -219,37 +233,44 @@ export default class PrivateReservationPage extends LightningElement {
 
     async handleShowBookModal(event) {
         if (!this.showBookBoatModal) {
-            const dataset = event.currentTarget.dataset
-            let currentAccountId = this.accountId || sessionStorage.getItem('accountId');
-            let transDetails =  await getTransactionFromAccount({ accountId: currentAccountId});
-            this.transactionId = transDetails?.Id;
-            
-            this.selectedBoat = {}
-            let selectedBoat = await this.populateSelectedBoat(dataset);
-            selectedBoat.formattedDate = service.formatDate(selectedBoat.date);
-            
-            let blockReason = null;
-            if (!transDetails || !transDetails.Active__c) {
-                blockReason = 'המנוי שלך אינו בתוקף';
-            } else if (transDetails.Club_Contract__c === false) {
-                blockReason = 'יש לחתום על תקנון המועדון על מנת להזמין את ההפלגה';
-            } else if (transDetails.End_Date__c && selectedBoat.date && new Date(selectedBoat.date) > new Date(transDetails.End_Date__c)) {
-                blockReason = 'המנוי שלך אינו בתוקף לתאריך ההפלגה';
-            } else if ((transDetails.Points_Balance__c || 0) < (selectedBoat.price || 0)) {
-                blockReason = 'אין מספיק נקודות במנוי עבור הפלגה זו';
-            }
-            selectedBoat.blockReason = blockReason;
-            
-            this.showBookBoatModal = true;
-            this.boatReserved = undefined;
-            this.selectedBoat = selectedBoat;
+            try {
+                const dataset = event.currentTarget.dataset
+                let currentAccountId = this.accountId || sessionStorage.getItem('accountId');
+                let transDetails =  await getTransactionFromAccount({ accountId: currentAccountId});
+                this.transactionId = transDetails?.Id;
+                
+                this.selectedBoat = {}
+                let selectedBoat = await this.populateSelectedBoat(dataset);
+                selectedBoat.formattedDate = service.formatDate(selectedBoat.date);
+                
+                let blockReason = selectedBoat.blockReason || null;
+                if (!blockReason) {
+                    if (!transDetails || !transDetails.Active__c) {
+                        blockReason = 'אין לך מנוי פעיל במועדון';
+                    } else if (transDetails.Club_Contract__c === false) {
+                        blockReason = 'טרם חתמת על תקנון מועדון לכן לא ניתן להזמין הפלגה';
+                    } else if (transDetails.End_Date__c && selectedBoat.date && new Date(selectedBoat.date) > new Date(transDetails.End_Date__c)) {
+                        blockReason = 'אין לך מנוי פעיל לתאריך ההפלגה';
+                    } else if ((transDetails.Points_Balance__c || 0) < (selectedBoat.price || 0)) {
+                        blockReason = 'יתרת הנקודות שלך לא מספיקה להזמנה זו';
+                    }
+                }
+                selectedBoat.blockReason = blockReason;
+                
+                this.showBookBoatModal = true;
+                this.boatReserved = undefined;
+                this.selectedBoat = selectedBoat;
+              } catch (error) {
+                  alert("Error opening modal: " + error.message + " - " + error.stack);
+                  console.error("Error in handleShowBookModal:", error);
+              }
         } else {
             this.showBookBoatModal = false;
         }
     }
 
     async populateSelectedBoat(dataset) {
-        const { boatId, name, startTime, endTime, boatType, isdisable } = dataset
+        const { boatId, name, startTime, endTime, boatType, isdisable, isexpired } = dataset
         const { date } = this.searchData
         const israelTimeZoneOffset = '+02:00'; // Israel is UTC+2 in standard time
         const startDate = new Date(`${this.searchData.date}T${startTime}:00${israelTimeZoneOffset}`);
@@ -267,7 +288,10 @@ export default class PrivateReservationPage extends LightningElement {
         };
         
         let price = await calculateCruisePrice({cruiseRec:cruiseRec});
-        return {
+        const blockReasonFromExpired = (isexpired === 'true' || isexpired === true) ? 'ההסמכה לסירה זו פגה תוקף ויש לתאם הפלגת רענון מול המשרד.' : '';
+
+        this.selectedBoat = {
+            id: boatId,
             boatId,
             date,
             name,
@@ -276,9 +300,11 @@ export default class PrivateReservationPage extends LightningElement {
             endTime,
             price,
             isdisable,
+            isexpired,
+            blockReason: blockReasonFromExpired,
             accountId: this.accountId
         }
-      
+        return this.selectedBoat;
     }
 
     async handleApprovePrivateReservation(event) {
@@ -327,7 +353,7 @@ export default class PrivateReservationPage extends LightningElement {
     }
 
     translateBoatTypesToEnglish(){
-        let searchDataEng = {'date':this.searchData.date,'boatTypes':[]} ;
+        let searchDataEng = { ...this.searchData, boatTypes: [] };
         this.searchData.boatTypes.forEach(element => {
             this.boatTypesArray.forEach(ele=>{
                 if(searchDataEng.boatTypes.length && searchDataEng.boatTypes.includes(ele.value)) {return}

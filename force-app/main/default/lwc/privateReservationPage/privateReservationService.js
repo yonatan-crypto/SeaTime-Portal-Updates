@@ -89,7 +89,7 @@ hideDate(){
 
     populateSelectedBoat(dataset) {
         console.log('populateSelectedBoat'+JSON.stringify(dataset));
-        const { boatId, name, startTime, endTime, boatType, isdisable } = dataset
+        const { boatId, name, startTime, endTime, boatType, isdisable, isexpired } = dataset
         const { date } = main.searchData
 
         console.log('searchData'+JSON.stringify(main.searchData));
@@ -111,7 +111,8 @@ hideDate(){
             endTime,
             price,
             isdisable,
-            accountId: main.accountId
+            isexpired,
+            accountId: main.searchData.accountId
         }
     }
 

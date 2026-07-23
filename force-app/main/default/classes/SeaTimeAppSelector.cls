@@ -124,6 +124,8 @@ public without sharing class SeaTimeAppSelector {
         Object[] boatTypesArrayObject = (Object[]) searchData.get('boatTypes');
         String[] boatTypesArray = String.join(boatTypesArrayObject, ';').split(';');
         Date searchDate = Date.valueOf((string) searchData.get('date'));
+        String accountIdStr = (String) searchData.get('accountId');
+        Id accountId = String.isNotBlank(accountIdStr) ? (Id)accountIdStr : null;
         Date nextDate = searchDate.addDays(1);
         return [SELECT id, Name, Type__c,
                 (SELECT id, Start_Time__c, End_Time__c, Duration__c 
@@ -132,8 +134,9 @@ public without sharing class SeaTimeAppSelector {
                 AND End_Date__c >=: searchDate AND Active__c = true),
                 (SELECT id,HPrice__c,Price__c, Start__c,Type__c 
                 FROM PriceListLines__r where PriceList__r.Start_Date__c <=:searchDate  AND PriceList__r.End_Date__c>=:searchDate AND Type__c = 'Club' ORDER BY LastModifiedDate desc),
-                (SELECT id, Boat__c, Account_Name__c 
-                FROM Certified_boat__r),
+                (SELECT id, Boat__c, Account_Name__c, Expiration_Date__c 
+                FROM Certified_boat__r
+                WHERE Account_Name__c = :accountId),
                 (select id,name,status__c, Start_Date__c, End_Date__c from Boat__r  WHERE Start_Date__c < :nextDate
                 AND End_Date__c > :searchDate AND Status__c Not IN ('Canceled')  order by Start_Date__c)
                 FROM Boats__c WHERE Type__c IN:boatTypesArray

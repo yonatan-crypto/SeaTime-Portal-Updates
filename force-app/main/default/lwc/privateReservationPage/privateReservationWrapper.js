@@ -337,12 +337,22 @@ export default class Service {
             return
         }
         //if boat has certificates but the assigned account does not have 
-        const accountWithCertificates = certificatesArray?.find(({ Account_Name__c }) => Account_Name__c == main.accountId)
+        const accountWithCertificates = certificatesArray?.find(({ Account_Name__c }) => Account_Name__c == main.searchData.accountId)
         console.log('accountWithCertificates: ' + JSON.stringify(accountWithCertificates));
         if (!accountWithCertificates) {
             boat.isCertificateRequired = true
             boat.boatSelector = 'boat-tile disable-boat'
         } else {
+            const expirationDateStr = accountWithCertificates.Expiration_Date__c;
+            if (expirationDateStr) {
+                const searchDate = new Date(`${main.searchData.date}T00:00:00`);
+                const expirationDate = new Date(expirationDateStr);
+                if (expirationDate < searchDate) {
+                    boat.isCertificateExpired = 'true';
+                    boat.boatSelector = 'boat-tile'
+                    return;
+                }
+            }
             boat.boatSelector = 'boat-tile'
         }
     }
