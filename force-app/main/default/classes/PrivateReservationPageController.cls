@@ -133,25 +133,16 @@ public without sharing class PrivateReservationPageController {
                 throw new AuraHandledException('לא נמצאה כתובת אימייל לשליחת התקנון.');
             }
             
-            List<doco__Form__c> forms = [SELECT Id FROM doco__Form__c WHERE doco__Name__c = 'הצטרפות למועדון' OR Name = '0000000' LIMIT 1];
-            Id formId = forms.isEmpty() ? null : forms[0].Id;
-            
-            doco__Signature__c sig = new doco__Signature__c(
-                doco__Form__c = formId,
-                SignatureDeal__c = trans.Id,
-                doco__Record_ID__c = String.valueOf(trans.Id),
-                doco__File_Name__c = 'טופס הצטרפות למועדון',
-                doco__Email_Address__c = email,
-                doco__Published__c = true,
-                doco__SubmitActionType__c = 1,
-                doco__Additional_Documents_Ids__c = 'formItSalfe',
-                doco__Signature_Expiration_Time_Hours__c = 168,
-                doco__Signature_Expiration_Time_minutes__c = 0
+            Docomotion_Request__e req = new Docomotion_Request__e(
+                Deal_Id__c = trans.Id,
+                Email__c = email
             );
-            try {
-                insert sig;
-            } catch (Exception sigEx) {
-                System.debug('Signature record insert error: ' + sigEx.getMessage());
+            Database.SaveResult sr = EventBus.publish(req);
+            if (!sr.isSuccess()) {
+                for (Database.Error err : sr.getErrors()) {
+                    System.debug('Error publishing Docomotion_Request__e: ' + err.getMessage());
+                    throw new AuraHandledException('שגיאה בשלוח בקשת התקנון: ' + err.getMessage());
+                }
             }
             return 'SUCCESS';
         } catch (AuraHandledException ahe) {
