@@ -10,7 +10,8 @@ private class DocomotionRequestTriggerTest {
             Account_Name__c = acc.Id,
             Date_of_Transaction__c = System.today(),
             Start_Date__c = System.today(),
-            End_Date__c = System.today()
+            End_Date__c = System.today(),
+            type_of_membership__c = 'חבר מועדון כולל פרטיות'
         );
         insert trans;
         
