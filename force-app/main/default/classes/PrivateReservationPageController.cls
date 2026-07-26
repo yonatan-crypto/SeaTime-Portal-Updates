@@ -137,7 +137,7 @@ public without sharing class PrivateReservationPageController {
             if (!Test.isRunningTest()) {
                 try {
                     doco__Signature__c sig = doco.RenderAPI.createLink(
-                        0, 
+                        'הצטרפות למועדון', 
                         trans.Id, 
                         null, 
                         false, 
