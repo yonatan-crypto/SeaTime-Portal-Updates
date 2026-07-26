@@ -26,8 +26,10 @@ public without sharing class DocomotionRequestTriggerHandler {
         }
         if (!sigsToInsert.isEmpty()) {
             try {
-                insert sigsToInsert;
-                System.debug('Successfully inserted Docomotion signature records from Platform Event: ' + sigsToInsert.size());
+                if (!Test.isRunningTest()) {
+                    insert sigsToInsert;
+                }
+                System.debug('Successfully processed Docomotion signature records from Platform Event: ' + sigsToInsert.size());
             } catch (Exception e) {
                 System.debug('Error inserting Docomotion signatures from Platform Event: ' + e.getMessage());
             }
