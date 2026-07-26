@@ -6,13 +6,15 @@
 
 import { LightningElement, api } from 'lwc'
 import Verbiages from 'c/seaTimeAppVerbiages'
+import generateAndSendClubContract from '@salesforce/apex/PrivateReservationPageController.generateAndSendClubContract';
 
 let verbiage
 
 export default class BookClubCruiseModal extends LightningElement {
 
-
     @api selectedCruise = {}
+    contractSent = false;
+    contractError = null;
     reachOutToClub
     clubCruiseBookingLabel
     cancel
@@ -47,5 +49,20 @@ export default class BookClubCruiseModal extends LightningElement {
     handleConfirm() {
         this.showSpinner = true
         this.dispatchEvent(new CustomEvent('confirm'))
+    }
+
+    async handleGenerateContract() {
+        this.showSpinner = true;
+        this.contractError = null;
+        try {
+            const transId = this.selectedCruise?.transactionId;
+            await generateAndSendClubContract({ transactionId: transId });
+            this.contractSent = true;
+        } catch (error) {
+            console.error('Error generating contract:', error);
+            this.contractError = error?.body?.message || error?.message || 'אירעה שגיאה בשליחת התקנון למייל.';
+        } finally {
+            this.showSpinner = false;
+        }
     }
 }

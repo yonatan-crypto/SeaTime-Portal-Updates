@@ -163,6 +163,8 @@ export default class Service {
             let status = this.getBookingStatus(clubCruise.price, clubCruise.startDate, clubCruise.recordTypeName, clubCruise.typeOfEnriching);
             clubCruise.isBookingNotAvailable = !status.isAvailable;
             clubCruise.bookingNotAvailableReason = status.reason;
+            clubCruise.isContractMissing = status.isContractMissing || false;
+            clubCruise.transactionId = status.transactionId || main.transaction?.Id;
             clubCruise.searchTileSelector = this.searchTileSelector(clubCruise.isBookingNotAvailable);
             })
         }
@@ -196,7 +198,12 @@ export default class Service {
         }
 
         if (main.transaction.Club_Contract__c === false) {
-            return { isAvailable: false, reason: 'יש לחתום על תקנון המועדון על מנת להזמין את ההפלגה' };
+            return { 
+                isAvailable: false, 
+                reason: 'יש לחתום על תקנון המועדון על מנת להזמין את ההפלגה',
+                isContractMissing: true,
+                transactionId: main.transaction?.Id 
+            };
         }
 
         const endDateStr = main.transaction?.End_Date__c;

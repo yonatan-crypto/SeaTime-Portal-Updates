@@ -249,6 +249,7 @@ export default class PrivateReservationPage extends LightningElement {
                         blockReason = 'אין לך מנוי פעיל במועדון';
                     } else if (transDetails.Club_Contract__c === false) {
                         blockReason = 'טרם חתמת על תקנון מועדון לכן לא ניתן להזמין הפלגה';
+                        selectedBoat.isContractMissing = true;
                     } else if (transDetails.End_Date__c && selectedBoat.date && new Date(selectedBoat.date) > new Date(transDetails.End_Date__c)) {
                         blockReason = 'אין לך מנוי פעיל לתאריך ההפלגה';
                     } else if ((transDetails.Points_Balance__c || 0) < (selectedBoat.price || 0)) {
@@ -256,6 +257,7 @@ export default class PrivateReservationPage extends LightningElement {
                     }
                 }
                 selectedBoat.blockReason = blockReason;
+                selectedBoat.transactionId = transDetails?.Id;
                 
                 this.showBookBoatModal = true;
                 this.boatReserved = undefined;

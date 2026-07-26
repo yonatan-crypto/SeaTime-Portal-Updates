@@ -20,6 +20,23 @@
                     {reachOutToClub}
                 </template>
             </p>
+            <template lwc:if={selectedCruise.isContractMissing}>
+                <div class="slds-m-top_medium slds-text-align_center" dir="rtl">
+                    <template lwc:if={contractSent}>
+                        <div class="slds-notify slds-notify_alert slds-alert_success slds-m-top_small" role="alert" style="border-radius: 6px; padding: 10px 16px; background-color: #e0f2f1; color: #004d40; border: 1px solid #009688; font-size: 1rem; font-weight: 500;">
+                            <span>התקנון נשלח אליכם למייל לחתימה, לאחר מכן תוכלו לחזור ולהזמין את ההפלגה</span>
+                        </div>
+                    </template>
+                    <template lwc:else>
+                        <button class="slds-button slds-button_brand moderate-button search-button" onclick={handleGenerateContract}>
+                            להפקת תקנון לחצו כאן
+                        </button>
+                    </template>
+                </div>
+                <template lwc:if={contractError}>
+                    <p class="slds-text-color_error slds-text-align_center slds-m-top_small" dir="rtl">{contractError}</p>
+                </template>
+            </template>
         </template>
         <template lwc:else>
             <p class="booking-confirmation-verbiage" dir="rtl">

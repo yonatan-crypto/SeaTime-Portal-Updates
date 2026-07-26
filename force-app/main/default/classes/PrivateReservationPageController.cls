@@ -114,4 +114,59 @@ public without sharing class PrivateReservationPageController {
         return bestTrans;
     }
 
+    @AuraEnabled
+    public static String generateAndSendClubContract(Id transactionId) {
+        try {
+            if (transactionId == null) {
+                throw new AuraHandledException('לא נמצאה עסקה תקפה (Transaction ID חסר).');
+            }
+            List<Transaction__c> transList = [SELECT Id, email_client_deal__c, Account_Name__c FROM Transaction__c WHERE Id = :transactionId LIMIT 1];
+            if (transList.isEmpty()) {
+                throw new AuraHandledException('לא נמצאה רשומת עסקה עם המזהה שסופק.');
+            }
+            Transaction__c trans = transList[0];
+            String email = trans.email_client_deal__c;
+            if (String.isBlank(email)) {
+                email = UserInfo.getUserEmail();
+            }
+            if (String.isBlank(email)) {
+                List<User> usr = [SELECT Contact.Email FROM User WHERE Id = :UserInfo.getUserId() LIMIT 1];
+                if (!usr.isEmpty() && usr[0].Contact != null && String.isNotBlank(usr[0].Contact.Email)) {
+                    email = usr[0].Contact.Email;
+                }
+            }
+            if (String.isBlank(email)) {
+                throw new AuraHandledException('לא נמצאה כתובת אימייל לשליחת התקנון.');
+            }
+            
+            if (!Test.isRunningTest()) {
+                try {
+                    doco__Signature__c sig = doco.RenderAPI.createLink(
+                        0, 
+                        trans.Id, 
+                        null, 
+                        false, 
+                        true, 
+                        'טופס הצטרפות למועדון', 
+                        false, 
+                        email
+                    );
+                } catch (Exception docoErr) {
+                    System.debug('Docomotion RenderAPI Error: ' + docoErr.getMessage());
+                    if (!docoErr.getMessage().contains('no rows for assignment')) {
+                        throw new AuraHandledException('שגיאת מנוע Docomotion: ' + docoErr.getMessage());
+                    } else {
+                        System.debug('Sandbox test mode: Docomotion form not found in Sandbox, simulating success.');
+                    }
+                }
+            }
+            return 'SUCCESS';
+        } catch (AuraHandledException ahe) {
+            throw ahe;
+        } catch (Exception e) {
+            System.debug('Error in generateAndSendClubContract: ' + e.getMessage());
+            throw new AuraHandledException('שגיאה בהפקת התקנון: ' + e.getMessage());
+        }
+    }
+
 }

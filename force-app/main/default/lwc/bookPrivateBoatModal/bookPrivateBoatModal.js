@@ -7,12 +7,15 @@
 import { LightningElement, api } from 'lwc';
 import Verbiages from 'c/seaTimeAppVerbiages';
 import DIR from "@salesforce/i18n/dir";
+import generateAndSendClubContract from '@salesforce/apex/PrivateReservationPageController.generateAndSendClubContract';
 
 let verbiages
 
 export default class BookPrivateBoatModal extends LightningElement {
 
     @api selectedBoat = {}
+    contractSent = false;
+    contractError = null;
     _boatReserved;
     showSpinner
     sailingDetails
@@ -77,6 +80,21 @@ export default class BookPrivateBoatModal extends LightningElement {
             bubbles: true,
             composed: true
         }))
+    }
+
+    async handleGenerateContract() {
+        this.showSpinner = true;
+        this.contractError = null;
+        try {
+            const transId = this.selectedBoat?.transactionId;
+            await generateAndSendClubContract({ transactionId: transId });
+            this.contractSent = true;
+        } catch (error) {
+            console.error('Error generating contract:', error);
+            this.contractError = error?.body?.message || error?.message || 'אירעה שגיאה בשליחת התקנון למייל.';
+        } finally {
+            this.showSpinner = false;
+        }
     }
 
 }

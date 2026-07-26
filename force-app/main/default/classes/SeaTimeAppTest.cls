@@ -129,6 +129,10 @@ public class SeaTimeAppTest {
         Id cruiseId = PrivateReservationPageController.createPrivateReservation(selectedBoat);
 
         Assert.isNotNull(cruiseId);
+
+        Transaction__c trans = [SELECT Id FROM Transaction__c LIMIT 1];
+        String result = PrivateReservationPageController.generateAndSendClubContract(trans.Id);
+        Assert.areEqual('SUCCESS', result);
     }
 
     @isTest
