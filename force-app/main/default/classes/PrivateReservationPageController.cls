@@ -169,7 +169,11 @@ public without sharing class PrivateReservationPageController {
                     doco__Email_Address__c = email,
                     doco__Published__c = true
                 );
-                insert fallbackSig;
+                try {
+                    insert fallbackSig;
+                } catch (Exception sigEx) {
+                    System.debug('Fallback signature insert error: ' + sigEx.getMessage());
+                }
             }
             return 'SUCCESS';
         } catch (AuraHandledException ahe) {
