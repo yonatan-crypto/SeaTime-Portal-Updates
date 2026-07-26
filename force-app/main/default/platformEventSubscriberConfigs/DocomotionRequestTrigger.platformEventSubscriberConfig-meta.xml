@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PlatformEventSubscriberConfig xmlns="http://soap.sforce.com/2006/04/metadata">
+    <platformEventConsumer>DocomotionRequestTrigger</platformEventConsumer>
+    <batchSize>200</batchSize>
+    <masterLabel>DocomotionRequestTrigger</masterLabel>
+    <user>office@sea-time.co.il</user>
+</PlatformEventSubscriberConfig>
