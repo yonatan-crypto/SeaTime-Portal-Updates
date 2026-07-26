@@ -152,7 +152,11 @@ public with sharing class CruiseHandlerTest {
         Schema.RecordTypeInfo clubInfo = Schema.SObjectType.Cruise__c.getRecordTypeInfosByDeveloperName().get('Club');
         if (clubInfo == null) return;
 
-        Employee__c emp = new Employee__c(Name = 'Test Guide');
+        Employee__c emp = new Employee__c(
+            Name = 'Test Guide',
+            Employee_Phone__c = '0501234567',
+            Employee_Email__c = 'testguide@example.com'
+        );
         insert emp;
 
         // Delete certification to simulate member without valid certification/renewal
