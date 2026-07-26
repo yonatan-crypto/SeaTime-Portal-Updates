@@ -99,8 +99,29 @@ public class SeaTimeAppTest {
         id accountId = getAccountId();
 
         Map<string, object> homePageData = HomePageController.getHomePageTabsData(accountId);
+        List<HomePageController.PastSailing> pastAll = HomePageController.getPastSailings(accountId, true);
+        List<HomePageController.PastSailing> pastActive = HomePageController.getPastSailings(accountId, false);
+
+        HomePageController.PastSailing ps1 = new HomePageController.PastSailing();
+        ps1.startDate = DateTime.now().addDays(-1);
+        ps1.boatName = 'Test Boat';
+        ps1.additionalInfo = 'Info';
+        ps1.status = 'Completed';
+        ps1.sailingType = 'Private';
+        ps1.Id = null;
+
+        HomePageController.PastSailing ps2 = new HomePageController.PastSailing();
+        ps2.startDate = DateTime.now().addDays(-5);
+        ps2.startDate = DateTime.now().addDays(-5);
+
+        ps1.compareTo(ps2);
+        ps2.compareTo(ps1);
+        ps1.compareTo(ps1);
+        ps1.compareTo(new HomePageController.PastSailing());
 
         Assert.isNotNull(homePageData);
+        Assert.isNotNull(pastAll);
+        Assert.isNotNull(pastActive);
     }
 
     @isTest
