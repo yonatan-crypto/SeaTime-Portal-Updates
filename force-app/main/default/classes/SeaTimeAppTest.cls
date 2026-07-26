@@ -127,12 +127,25 @@ public class SeaTimeAppTest {
         };
 
         Id cruiseId = PrivateReservationPageController.createPrivateReservation(selectedBoat);
-
         Assert.isNotNull(cruiseId);
 
+        // Test duplicate booking check
+        String dupResult = PrivateReservationPageController.createPrivateReservation(selectedBoat);
+        Assert.areEqual('Booked Already', dupResult);
+
+        // Test getTransactionFromAccount
+        Transaction__c fetchedTrans = PrivateReservationPageController.getTransactionFromAccount(accountId);
+        Assert.isNotNull(fetchedTrans);
+        PrivateReservationPageController.getTransactionFromAccount(null);
+
+        // Test generateAndSendClubContract
         Transaction__c trans = [SELECT Id FROM Transaction__c LIMIT 1];
         String result = PrivateReservationPageController.generateAndSendClubContract(trans.Id);
         Assert.areEqual('SUCCESS', result);
+
+        try {
+            PrivateReservationPageController.generateAndSendClubContract(null);
+        } catch(Exception e) {}
     }
 
     @isTest
