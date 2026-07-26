@@ -89,7 +89,6 @@ public without sharing class PrivateReservationPageController {
         Transaction__c bestTrans = activeTransactions[0].clone(true, true, true, true);
         
         Date maxEndDate = null;
-        Boolean anyTakanon = false;
 
         for (Transaction__c trans : activeTransactions) {
             // Track the furthest end date
@@ -98,10 +97,6 @@ public without sharing class PrivateReservationPageController {
                     maxEndDate = trans.End_Date__c;
                 }
             }
-            // Track if any record has the Takanon signed
-            if (trans.Club_Contract__c == true) {
-                anyTakanon = true;
-            }
             // If the "best" record is missing membership type but a later one has it, take it
             if (String.isBlank(bestTrans.type_of_membership__c) && String.isNotBlank(trans.type_of_membership__c)) {
                 bestTrans.type_of_membership__c = trans.type_of_membership__c;
@@ -109,7 +104,6 @@ public without sharing class PrivateReservationPageController {
         }
 
         bestTrans.End_Date__c = maxEndDate;
-        bestTrans.Club_Contract__c = anyTakanon;
 
         return bestTrans;
     }
