@@ -15,8 +15,15 @@ public class CruiseManager {
     public void checkAccountHasCertificate(List <Cruise__c> clubCruiseList, Map <Id,Account> accMap ){
         for (Cruise__c criuseItem : clubCruiseList){
             Account relatedAccount = accMap.get(criuseItem.Id);
+            Boolean hasGuide = (criuseItem.Guide__c != null || criuseItem.Skipper__c != null || criuseItem.need_skipper__c == true);
             if(!isAccountCertified(criuseItem,relatedAccount) && criuseItem.Payment_Required__c == false && criuseItem.Status__c != 'Canceled'){                     
-                criuseItem.Status__c = 'No Qualification';
+                if (hasGuide) {
+                    if (criuseItem.Status__c == null || criuseItem.Status__c == 'No Qualification') {
+                        criuseItem.Status__c = 'Approved';
+                    }
+                } else {
+                    criuseItem.Status__c = 'No Qualification';
+                }
             }else if(criuseItem.Status__c == null){
                 criuseItem.Status__c ='Awaiting for Approval';
             }

@@ -143,4 +143,36 @@ public with sharing class CruiseHandlerTest {
         // Transaction__c updatedTran = [SELECT Used_Points__c FROM Transaction__c WHERE Id = :tran.Id];
         // System.assert(updatedTran.Used_Points__c >= 100, 'Transaction should reflect the adjusted points');
     }
+
+    @isTest
+    static void testNoQualificationWithGuide() {
+        Account acc = [SELECT Id FROM Account LIMIT 1];
+        Boats__c boat = [SELECT Id FROM Boats__c LIMIT 1];
+        Transaction__c tran = [SELECT Id FROM Transaction__c LIMIT 1];
+        Schema.RecordTypeInfo clubInfo = Schema.SObjectType.Cruise__c.getRecordTypeInfosByDeveloperName().get('Club');
+        if (clubInfo == null) return;
+
+        Employee__c emp = new Employee__c(Name = 'Test Guide');
+        insert emp;
+
+        // Delete certification to simulate member without valid certification/renewal
+        delete [SELECT Id FROM Certification__c WHERE Account_Name__c = :acc.Id];
+
+        Test.startTest();
+        Cruise__c cruise = new Cruise__c(
+            AccountName__c = acc.Id,
+            Boat__c = boat.Id,
+            Transaction__c = tran.Id,
+            Start_Date__c = System.now().addDays(2),
+            End_Date__c = System.now().addDays(2).addHours(2),
+            RecordTypeId = clubInfo.getRecordTypeId(),
+            Guide__c = emp.Id,
+            Status__c = 'Approved'
+        );
+        insert cruise;
+        Test.stopTest();
+
+        Cruise__c saved = [SELECT Status__c FROM Cruise__c WHERE Id = :cruise.Id];
+        System.assertEquals('Approved', saved.Status__c, 'Status should remain Approved when a Guide is assigned, even without certification.');
+    }
 }
