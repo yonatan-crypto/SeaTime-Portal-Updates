@@ -2,13 +2,15 @@
 private class DocomotionRequestTriggerTest {
     @isTest
     static void testPlatformEventHandling() {
-        Account acc = new Account(Name = 'Test Account for Event');
+        Account acc = new Account(Name = 'Test Account for Event', phone='1234567', Email__c='test@example.com');
         insert acc;
         
         Transaction__c trans = new Transaction__c(
-            Account__c = acc.Id,
-            Status__c = 'פעילה',
-            email_client_deal__c = 'test@example.com'
+            Name = 'Test Deal',
+            Account_Name__c = acc.Id,
+            Date_of_Transaction__c = System.today(),
+            Start_Date__c = System.today(),
+            End_Date__c = System.today()
         );
         insert trans;
         
