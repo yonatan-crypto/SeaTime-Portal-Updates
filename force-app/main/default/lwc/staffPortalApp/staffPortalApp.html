@@ -1,0 +1,25 @@
+<template>
+    <div class="app-container">
+        <template if:true={isLoginState}>
+            <c-staff-login-page onauthenticated={handleAuthenticated}></c-staff-login-page>
+        </template>
+        
+        <template if:true={isAppState}>
+            <c-staff-app-navigation 
+                current-page={currentPage} 
+                employee-name={employeeName}
+                onnavigate={handleNavigate}
+                onlogout={handleLogout}>
+            </c-staff-app-navigation>
+            
+            <div class="page-content">
+                <template if:true={showCalendar}>
+                    <c-staff-day-calendar onnavigate={handleNavigate}></c-staff-day-calendar>
+                </template>
+                <template if:true={showCruises}>
+                    <c-staff-cruise-list employee-id={employeeId} onnavigate={handleNavigate}></c-staff-cruise-list>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>

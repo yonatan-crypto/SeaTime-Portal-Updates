@@ -1,0 +1,100 @@
+<template>
+    <div class="list-container" dir="rtl">
+        <!-- Header Bar with Calendar Button -->
+        <div class="header-bar">
+            <h2 class="header-title">📋 ההפלגות שלי</h2>
+            <button class="calendar-btn" onclick={handleGoToCalendar} type="button">
+                📅 צפייה ביומן הסירות
+            </button>
+        </div>
+
+        <!-- Loading -->
+        <template if:true={isLoading}>
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <span>טוען הפלגות...</span>
+            </div>
+        </template>
+
+        <!-- Error State -->
+        <template if:true={errorMsg}>
+            <div class="error-msg">{errorMsg}</div>
+        </template>
+
+        <!-- Cruise List -->
+        <template if:false={isLoading}>
+            <template if:true={hasCruises}>
+                <div class="cruises-wrapper">
+                    <template for:each={cruises} for:item="cruise">
+                        <div key={cruise.Id} class="cruise-card">
+                            <!-- Cruise Header - Clickable Card -->
+                            <div class="cruise-header" 
+                                 onclick={handleToggleCruise} 
+                                 data-index={cruise.index}
+                                 role="button"
+                                 tabindex="0">
+                                <div class="cruise-main-info">
+                                    <div class="cruise-day-date">
+                                        <span class="day-name">יום {cruise.dayName}</span>
+                                        <span class="date-str">{cruise.dateStr}</span>
+                                    </div>
+                                    <div class="cruise-time-boat">
+                                        <span class="time-range">🕐 {cruise.startTime} - {cruise.endTime}</span>
+                                        <span class="boat-name">⛵ {cruise.boatName}</span>
+                                        <span class="type-badge">{cruise.typeName}</span>
+                                    </div>
+                                    <template if:true={cruise.customerName}>
+                                        <div class="customer-info">👤 לקוח: {cruise.customerName}</div>
+                                    </template>
+                                    <template if:true={cruise.hasAdditionalInfo}>
+                                        <div class="additional-info">ℹ️ {cruise.additionalInfo}</div>
+                                    </template>
+                                </div>
+                                <div class="expand-icon">{cruise.expandIcon}</div>
+                            </div>
+
+                            <!-- Expanded Participants -->
+                            <template if:true={cruise.expanded}>
+                                <div class="cruise-details">
+                                    <template if:false={cruise.participantsLoaded}>
+                                        <div class="loading-participants">טוען משתתפים...</div>
+                                    </template>
+                                    <template if:true={cruise.participantsLoaded}>
+                                        <template if:true={cruise.hasParticipants}>
+                                            <h4 class="participants-title">משתתפים בהפלגה:</h4>
+                                            <ul class="participant-list">
+                                                <template for:each={cruise.participants} for:item="part">
+                                                    <li key={part.Id} class="participant-item">
+                                                        <span class="participant-name">👤 {part.participantName}</span>
+                                                        <template if:true={part.hasPhone}>
+                                                            <a href={part.telLink} 
+                                                               class="participant-phone" 
+                                                               onclick={handlePhoneClick}>
+                                                                📞 {part.participantPhone}
+                                                            </a>
+                                                        </template>
+                                                    </li>
+                                                </template>
+                                            </ul>
+                                        </template>
+                                        <template if:false={cruise.hasParticipants}>
+                                            <div class="no-participants">אין משתתפים נוספים רשומים בהפלגה זו</div>
+                                        </template>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <!-- Empty State -->
+            <template if:true={noCruises}>
+                <div class="empty-state">
+                    <div class="empty-icon">⛵</div>
+                    <div class="empty-text">אין הפלגות עתידיות ששובצת אליהן כמדריך</div>
+                </div>
+            </template>
+        </template>
+    </div>
+</template>

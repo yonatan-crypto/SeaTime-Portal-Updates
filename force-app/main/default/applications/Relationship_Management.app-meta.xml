@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomApplication xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionOverrides>
+        <actionName>View</actionName>
+        <comment>Action override created by Lightning App Builder during activation.</comment>
+        <content>FlexiPage3</content>
+        <formFactor>Large</formFactor>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
+        <pageOrSobjectType>Cruise__c</pageOrSobjectType>
+    </actionOverrides>
+    <actionOverrides>
+        <actionName>View</actionName>
+        <comment>Action override created by Lightning App Builder during activation.</comment>
+        <content>Marketing_goal_Record_Page</content>
+        <formFactor>Large</formFactor>
+        <skipRecordTypeSelect>false</skipRecordTypeSelect>
+        <type>Flexipage</type>
+        <pageOrSobjectType>Marketing_goal__c</pageOrSobjectType>
+    </actionOverrides>
+    <brand>
+        <headerColor>#0070D2</headerColor>
+        <logoVersion>1</logoVersion>
+        <shouldOverrideOrgTheme>false</shouldOverrideOrgTheme>
+    </brand>
+    <description>Build stronger customer relationships, manage renewals, and stay organized.</description>
+    <formFactors>Large</formFactors>
+    <isNavAutoTempTabsDisabled>false</isNavAutoTempTabsDisabled>
+    <isNavPersonalizationDisabled>false</isNavPersonalizationDisabled>
+    <isNavTabPersistenceDisabled>false</isNavTabPersistenceDisabled>
+    <isOmniPinnedViewEnabled>false</isOmniPinnedViewEnabled>
+    <label>Relationship Management</label>
+    <navType>Standard</navType>
+    <tabs>standard-home</tabs>
+    <tabs>StaffPortal</tabs>
+    <tabs>standard-Account</tabs>
+    <tabs>standard-Contact</tabs>
+    <tabs>standard-Contract</tabs>
+    <tabs>standard-Event</tabs>
+    <tabs>standard-CollaborationGroup</tabs>
+    <tabs>standard-ContentNote</tabs>
+    <tabs>standard-Task</tabs>
+    <tabs>Calender_Assignment</tabs>
+    <tabs>malfunction__c</tabs>
+    <tabs>courses__c</tabs>
+    <tabs>marketing__c</tabs>
+    <tabs>Marketing_goal__c</tabs>
+    <tabs>Learning_Program_Type__c</tabs>
+    <tabs>Partecipant__c</tabs>
+    <tabs>charter_company__c</tabs>
+    <tabs>charters__c</tabs>
+    <tabs>Area_of_Sail__c</tabs>
+    <tabs>Shared_Documents__c</tabs>
+    <tabs>Flotillas__c</tabs>
+    <tabs>Flight__c</tabs>
+    <tabs>holidays__c</tabs>
+    <tabs>TasksSeaTime__c</tabs>
+    <uiType>Lightning</uiType>
+    <utilityBar>Relationship_Management_UtilityBar</utilityBar>
+</CustomApplication>

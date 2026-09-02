@@ -1,0 +1,69 @@
+<template>
+    <div class="calendar-container" dir="rtl">
+        <!-- Navigation Bar -->
+        <div class="nav-bar">
+            <button class="nav-btn" onclick={handleNextDay}>&#8594;</button>
+            <div class="date-display">{formattedDate}</div>
+            <button class="nav-btn" onclick={handlePreviousDay}>&#8592;</button>
+            <button class="nav-btn today-btn" onclick={handleToday}>היום</button>
+            <input type="date" class="nav-btn date-picker" value={dateInputValue} onchange={handleDateChange} />
+            <select class="boat-filter" onchange={handleBoatFilter}>
+                <template for:each={boatOptions} for:item="opt">
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                </template>
+            </select>
+        </div>
+
+        <!-- Loading -->
+        <template if:true={isLoading}>
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <span>טוען...</span>
+            </div>
+        </template>
+
+        <!-- Calendar Matrix -->
+        <template if:false={isLoading}>
+            <div class="table-wrapper">
+                <table class="matrix-table">
+                    <thead>
+                        <tr>
+                            <th class="hour-cell">שעה</th>
+                            <template for:each={filteredBoats} for:item="boat">
+                                <th key={boat.Id} class="boat-header">{boat.Name}</th>
+                            </template>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template for:each={calendarGrid} for:item="row">
+                            <tr key={row.hourKey}>
+                                <td class="hour-cell">{row.hour}</td>
+                                <template for:each={row.boats} for:item="cell">
+                                    <td key={cell.key} class="boat-cell">
+                                        <template for:each={cell.cruises} for:item="cruise">
+                                            <div key={cruise.Id} class={cruise.typeClass} style={cruise.blockStyle}>
+                                                <div class="cruise-time">{cruise.timeRange}</div>
+                                                <div class="cruise-type">{cruise.typeName}</div>
+                                                <template if:true={cruise.customerName}>
+                                                    <div class="cruise-customer">{cruise.customerName}</div>
+                                                </template>
+                                                <template if:true={cruise.guideName}>
+                                                    <div class="cruise-guide">{cruise.guideName}</div>
+                                                </template>
+                                                <template if:true={cruise.guidePhone}>
+                                                    <div class="cruise-phone">
+                                                        <a href={cruise.telLink}>{cruise.guidePhone}</a>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                    </td>
+                                </template>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+        </template>
+    </div>
+</template>

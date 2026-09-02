@@ -1,0 +1,268 @@
+:host {
+    direction: rtl;
+    font-family: Arial, sans-serif;
+    display: block;
+}
+
+.calendar-container {
+    width: 100%;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* Navigation Bar */
+.nav-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-bottom: 2px solid #e0e0e0;
+    background: #f8f9fa;
+    flex-wrap: wrap;
+}
+
+.nav-btn {
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover {
+    background: #e8e8e8;
+    border-color: #999;
+}
+
+.today-btn {
+    background: #1976d2;
+    color: white;
+    border-color: #1565c0;
+    font-weight: bold;
+}
+
+.today-btn:hover {
+    background: #1565c0;
+}
+
+.date-display {
+    font-size: 18px;
+    font-weight: bold;
+    color: #333;
+    flex: 1;
+    text-align: center;
+    min-width: 200px;
+}
+
+.date-picker {
+    font-size: 13px;
+    padding: 5px 8px;
+}
+
+.boat-filter {
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    background: white;
+}
+
+/* Table */
+.table-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 80px);
+}
+
+.matrix-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    min-width: 800px;
+}
+
+.matrix-table th {
+    background: #f0f4f8;
+    border: 1px solid #ddd;
+    padding: 10px 4px;
+    font-size: 13px;
+    font-weight: bold;
+    text-align: center;
+    color: #333;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.boat-header {
+    min-width: 90px;
+}
+
+.hour-cell {
+    background: #f5f7fa !important;
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+    color: #666;
+    width: 55px;
+    min-width: 55px;
+    max-width: 55px;
+}
+
+.boat-cell {
+    border: 1px solid #e8e8e8;
+    height: 50px;
+    vertical-align: top;
+    position: relative;
+    padding: 0;
+}
+
+/* Cruise Blocks */
+.cruise-block {
+    position: absolute;
+    left: 2px;
+    right: 2px;
+    border-radius: 5px;
+    padding: 4px 6px;
+    font-size: 11px;
+    color: white;
+    overflow: hidden;
+    cursor: pointer;
+    z-index: 5;
+    line-height: 1.35;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    transition: box-shadow 0.2s;
+}
+
+.cruise-block:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.35);
+    z-index: 6;
+}
+
+/* Color coding by RecordType */
+.type-club {
+    background: linear-gradient(135deg, #4CAF50, #388E3C);
+}
+
+.type-course {
+    background: linear-gradient(135deg, #4CAF50, #2E7D32);
+}
+
+.type-general {
+    background: linear-gradient(135deg, #3F51B5, #303F9F);
+}
+
+.type-friends {
+    background: linear-gradient(135deg, #3F51B5, #283593);
+}
+
+.type-enriching {
+    background: linear-gradient(135deg, #7B1FA2, #6A1B9A);
+}
+
+.type-renting {
+    background: linear-gradient(135deg, #00BCD4, #0097A7);
+}
+
+.type-certification {
+    background: linear-gradient(135deg, #00ACC1, #00838F);
+}
+
+.type-intro {
+    background: linear-gradient(135deg, #FF9800, #F57C00);
+}
+
+.type-maintenance {
+    background: linear-gradient(135deg, #9E9E9E, #757575);
+}
+
+.type-default {
+    background: linear-gradient(135deg, #78909C, #607D8B);
+}
+
+.cruise-time {
+    font-weight: bold;
+    font-size: 11px;
+    margin-bottom: 1px;
+}
+
+.cruise-type {
+    font-size: 11px;
+    opacity: 0.95;
+}
+
+.cruise-customer {
+    font-size: 10px;
+    margin-top: 1px;
+    opacity: 0.9;
+}
+
+.cruise-guide {
+    font-size: 10px;
+    margin-top: 1px;
+}
+
+.cruise-phone {
+    font-size: 10px;
+}
+
+.cruise-phone a {
+    color: white;
+    text-decoration: underline;
+}
+
+/* Spinner */
+.spinner-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 60px;
+    color: #666;
+    font-size: 16px;
+}
+
+.spinner {
+    width: 36px;
+    height: 36px;
+    border: 4px solid #e0e0e0;
+    border-top: 4px solid #1976d2;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .nav-bar {
+        padding: 8px;
+        gap: 6px;
+    }
+    .date-display {
+        font-size: 14px;
+        min-width: auto;
+        order: -1;
+        width: 100%;
+    }
+    .matrix-table th {
+        font-size: 11px;
+        padding: 6px 2px;
+    }
+    .boat-cell {
+        height: 45px;
+    }
+    .cruise-block {
+        font-size: 10px;
+        padding: 2px 4px;
+    }
+}

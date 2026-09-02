@@ -1,0 +1,12 @@
+<template>
+    <div class="nav-bar" dir="rtl">
+        <div class="nav-left">
+            <button class="logout-btn" onclick={handleLogout}>התנתק</button>
+            <span class="user-name">שלום, {employeeName}</span>
+        </div>
+        <div class="nav-right">
+            <div class={cruisesClass} data-page="cruises" onclick={handleNavigate}>📋 ההפלגות שלי</div>
+            <div class={calendarClass} data-page="calendar" onclick={handleNavigate}>📅 יומן סירות</div>
+        </div>
+    </div>
+</template>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Access to Staff Portal tab, components and employee auth fields</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Staff Portal Access</label>
+    <tabSettings>
+        <tab>StaffPortal</tab>
+        <visibility>Visible</visibility>
+    </tabSettings>
+    <classAccesses>
+        <apexClass>StaffPortalController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>StaffLoginController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <pageAccesses>
+        <apexPage>StaffPortal</apexPage>
+        <enabled>true</enabled>
+    </pageAccesses>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Employee__c.Code__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Employee__c.Strong_Password__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Employee__c.Is_Strong_Password__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Employee__c.Login_Attempt__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+</PermissionSet>

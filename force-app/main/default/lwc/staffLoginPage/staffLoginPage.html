@@ -1,0 +1,96 @@
+<template>
+    <div class="login-container" dir="rtl">
+        <div class="login-card">
+            <!-- Logo -->
+            <div class="logo-container">
+                <img src={logoUrl} alt="Sea Time" class="logo" />
+            </div>
+            <h2 class="login-title">כניסה לפורטל מדריכים</h2>
+
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <div class="spinner-overlay">
+                    <div class="spinner"></div>
+                </div>
+            </template>
+
+            <!-- Success Message -->
+            <template if:true={successMsg}>
+                <div class="success-msg">{successMsg}</div>
+            </template>
+
+            <!-- Error Message -->
+            <template if:true={errorMsg}>
+                <div class="error-msg">{errorMsg}</div>
+            </template>
+
+            <!-- Login Form -->
+            <template if:true={isLoginState}>
+                <div class="form-group">
+                    <label class="form-label">אימייל</label>
+                    <input type="email" class="form-input" placeholder="הזן אימייל" 
+                           value={userName} onchange={handleUserNameChange} />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">סיסמה</label>
+                    <input type="password" class="form-input" placeholder="הזן סיסמה" 
+                           value={password} onchange={handlePasswordChange} />
+                </div>
+                <button class="btn btn-primary" onclick={handleLogin}>כניסה</button>
+                <div class="reset-link">
+                    <a onclick={openResetPopup}>יצירת / איפוס סיסמה</a>
+                </div>
+            </template>
+
+            <!-- OTP Form -->
+            <template if:true={isOtpState}>
+                <p class="otp-info">קוד אימות נשלח אליך ב-SMS</p>
+                <div class="form-group">
+                    <label class="form-label">קוד אימות</label>
+                    <input type="text" class="form-input otp-input" placeholder="הזן קוד 6 ספרות" 
+                           value={otp} onchange={handleOtpChange} maxlength="6" />
+                </div>
+                <button class="btn btn-primary" onclick={handleSubmitOtp}>אימות</button>
+            </template>
+
+            <!-- Create Password Form -->
+            <template if:true={isCreatePasswordState}>
+                <p class="password-info">צור סיסמה חזקה (לפחות 8 תווים)</p>
+                <div class="form-group">
+                    <label class="form-label">סיסמה חדשה</label>
+                    <input type="password" class="form-input" placeholder="לפחות 8 תווים" 
+                           value={newPassword} onchange={handleNewPasswordChange} />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">אימות סיסמה</label>
+                    <input type="password" class="form-input" placeholder="הזן שוב" 
+                           value={confirmPassword} onchange={handleConfirmPasswordChange} />
+                </div>
+                <template if:true={passwordError}>
+                    <div class="field-error">{passwordError}</div>
+                </template>
+                <button class="btn btn-primary" onclick={handleSavePassword} disabled={passwordsMatch}>שמור סיסמה</button>
+            </template>
+
+            <!-- Reset Password Request -->
+            <template if:true={isResetRequestState}>
+                <h3 class="reset-title">איפוס סיסמה</h3>
+                <p class="reset-info">הזן את האימייל ומספר הטלפון שלך לאימות</p>
+                <div class="form-group">
+                    <label class="form-label">אימייל</label>
+                    <input type="email" class="form-input" placeholder="הזן אימייל" 
+                           value={resetEmail} onchange={handleResetEmailChange} />
+                </div>
+                <div class="form-group">
+                    <label class="form-label">מספר טלפון</label>
+                    <input type="tel" class="form-input" placeholder="הזן מספר טלפון" 
+                           value={resetPhone} onchange={handleResetPhoneChange} />
+                </div>
+                <div class="btn-group">
+                    <button class="btn btn-primary" onclick={handleResetSubmit}>שלח קוד אימות</button>
+                    <button class="btn btn-secondary" onclick={closeResetPopup}>ביטול</button>
+                </div>
+            </template>
+        </div>
+    </div>
+</template>
