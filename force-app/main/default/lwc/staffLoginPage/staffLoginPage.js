@@ -35,6 +35,9 @@ export default class StaffLoginPage extends LightningElement {
     get isSaveDisabled() {
         return !this.passwordsMatch || this.isLoading;
     }
+    get saveButtonClass() {
+        return this.passwordsMatch ? 'btn btn-primary btn-save-active' : 'btn btn-primary btn-save-disabled';
+    }
     get passwordError() {
         if (this.newPassword && this.newPassword.length < 8) return 'הסיסמה חייבת להכיל לפחות 8 תווים';
         if (this.newPassword && this.confirmPassword && this.newPassword !== this.confirmPassword) return 'הסיסמאות אינן תואמות';
