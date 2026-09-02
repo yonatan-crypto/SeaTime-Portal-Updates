@@ -32,6 +32,9 @@ export default class StaffLoginPage extends LightningElement {
     get passwordsMatch() { 
         return this.newPassword && this.confirmPassword && this.newPassword === this.confirmPassword && this.newPassword.length >= 8; 
     }
+    get isSaveDisabled() {
+        return !this.passwordsMatch || this.isLoading;
+    }
     get passwordError() {
         if (this.newPassword && this.newPassword.length < 8) return 'הסיסמה חייבת להכיל לפחות 8 תווים';
         if (this.newPassword && this.confirmPassword && this.newPassword !== this.confirmPassword) return 'הסיסמאות אינן תואמות';
@@ -105,6 +108,11 @@ export default class StaffLoginPage extends LightningElement {
             const result = await isValidOtp({ employeeId: this.employeeId, otp: this.otp });
 
             if (result.isOtpValidated) {
+                if (result.employeeRecord) {
+                    this.employeeRecord = result.employeeRecord;
+                    this.employeeId = result.employeeRecord.Id;
+                    this.employeeName = result.employeeRecord.Name;
+                }
                 if (this.isFirstTimeStrongPassword) {
                     this.state = 'createPassword';
                 } else {
@@ -123,8 +131,9 @@ export default class StaffLoginPage extends LightningElement {
 
     async handleSavePassword() {
         this.errorMsg = '';
+        this.successMsg = '';
         if (!this.passwordsMatch) {
-            this.errorMsg = this.passwordError || 'אנא מלא את שני שדות הסיסמה';
+            this.errorMsg = this.passwordError || 'אנא מלא את שני שדות הסיסמה (לפחות 8 תווים)';
             return;
         }
 
@@ -136,16 +145,17 @@ export default class StaffLoginPage extends LightningElement {
             });
 
             if (result) {
-                this.successMsg = 'סיסמה נשמרה בהצלחה!';
-                // Wait a moment then navigate
+                this.successMsg = 'סיסמה נשמרה בהצלחה! מעביר לפורטל...';
                 // eslint-disable-next-line @lwc/lwc/no-async-operation
-                setTimeout(() => { this.navigateToApp(); }, 1500);
+                setTimeout(() => { 
+                    this.navigateToApp(); 
+                }, 1000);
             } else {
                 this.errorMsg = 'שגיאה בשמירת הסיסמה. הסיסמה חייבת להכיל 8 תווים לפחות.';
             }
         } catch (e) {
             console.error('Save password error:', e);
-            this.errorMsg = 'שגיאת מערכת';
+            this.errorMsg = 'שגיאת מערכת בשמירת הסיסמה';
         } finally {
             this.isLoading = false;
         }

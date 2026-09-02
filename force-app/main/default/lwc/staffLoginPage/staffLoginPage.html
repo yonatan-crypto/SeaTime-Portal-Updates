@@ -69,7 +69,7 @@
                 <template if:true={passwordError}>
                     <div class="field-error">{passwordError}</div>
                 </template>
-                <button class="btn btn-primary" onclick={handleSavePassword} disabled={passwordsMatch}>שמור סיסמה</button>
+                <button class="btn btn-primary" onclick={handleSavePassword} disabled={isSaveDisabled}>שמור סיסמה</button>
             </template>
 
             <!-- Reset Password Request -->
