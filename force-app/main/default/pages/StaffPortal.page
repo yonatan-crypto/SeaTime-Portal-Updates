@@ -57,6 +57,9 @@
         </div>
         <div id="staffPortalContainer"></div>
         <script>
+            var prefix = "{!$Site.Prefix}";
+            var lightningEndPoint = prefix ? (window.location.origin + prefix) : "";
+            
             $Lightning.use("c:StaffPortalAppAura", function() {
                 $Lightning.createComponent(
                     "c:staffPortalApp",
@@ -79,7 +82,7 @@
                         }
                     }
                 );
-            });
+            }, lightningEndPoint);
         </script>
     </body>
 </apex:page>
