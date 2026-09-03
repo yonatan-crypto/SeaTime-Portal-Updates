@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Travel_Cost__c</fullName>
-    <label>דמי נסיעות ליום</label>
-    <type>Currency</type>
+    <label>עלות נסיעה ליום עבודה</label>
+    <type>Number</type>
     <precision>18</precision>
     <scale>0</scale>
     <defaultValue>25</defaultValue>

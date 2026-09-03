@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Full_Day_Rate__c</fullName>
-    <label>תעריף יום מלא / חו״ל</label>
-    <type>Currency</type>
+    <label>תעריף יום עבודה מלא</label>
+    <type>Number</type>
     <precision>18</precision>
     <scale>0</scale>
     <defaultValue>590</defaultValue>

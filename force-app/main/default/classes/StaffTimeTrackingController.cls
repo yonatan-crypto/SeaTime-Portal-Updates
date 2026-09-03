@@ -43,6 +43,19 @@ public without sharing class StaffTimeTrackingController {
         12 => '16:20'
     };
 
+    // Official Israeli Holidays and Eves of Holidays
+    private static final Set<String> FULL_HOLIDAYS = new Set<String>{
+        '2026-04-02', '2026-04-08', '2026-04-22', '2026-05-22',
+        '2026-09-12', '2026-09-13', '2026-09-26', '2026-10-02',
+        '2025-04-13', '2025-04-19', '2025-06-02', '2025-09-23', '2025-09-24', '2025-10-07', '2025-10-14'
+    };
+
+    private static final Set<String> EVE_OF_HOLIDAYS = new Set<String>{
+        '2026-04-01', '2026-04-07', '2026-04-21', '2026-05-21',
+        '2026-09-11', '2026-09-25', '2026-10-01',
+        '2025-04-12', '2025-04-18', '2025-06-01', '2025-09-22', '2025-10-06', '2025-10-13'
+    };
+
     @AuraEnabled(cacheable=false)
     public static MonthlySummary getMonthlyReport(Id employeeId, Integer year, Integer month) {
         MonthlySummary summary = new MonthlySummary();
@@ -195,41 +208,40 @@ public without sharing class StaffTimeTrackingController {
 
         // Determine Entry Type and Base Rate
         String devName = c.RecordType != null ? c.RecordType.DeveloperName : '';
-        Decimal baseRate = 70;
+        Decimal baseRate = emp.Rate_Instruction__c != null ? emp.Rate_Instruction__c : 70;
         String entryType = 'הפלגה';
 
         if (c.Dock_Duty__c == true) {
             entryType = 'תורנות רציף';
             baseRate = emp.Rate_Dock_Duty__c != null ? emp.Rate_Dock_Duty__c : 50;
-        } else if (devName == 'Course') {
-            entryType = 'קורס';
-            baseRate = emp.Rate_Instruction__c != null ? emp.Rate_Instruction__c : 70;
-        } else if (devName == 'Club') {
-            entryType = 'הפלגה';
-            baseRate = emp.Rate_Club__c != null ? emp.Rate_Club__c : 70;
         } else if (devName == 'Renting') {
+            // השכרה / צ'רטר -> השכרת יאכטות (צ'רטר)
             entryType = 'הפלגה';
-            baseRate = emp.Rate_Skipper__c != null ? emp.Rate_Skipper__c : 70;
+            baseRate = emp.Rate_Skipper__c != null ? emp.Rate_Skipper__c : (emp.Rate_Instruction__c != null ? emp.Rate_Instruction__c : 70);
         } else if (devName == 'Maintenance') {
             entryType = 'תחזוקה';
             baseRate = emp.Rate_Maintenance__c != null ? emp.Rate_Maintenance__c : 50;
-        } else if (devName == 'Enriching') {
-            entryType = 'הפלגה';
+        } else if (devName == 'Course' || devName == 'Club' || devName == 'Introduction' || devName == 'Enriching' || devName == 'Friends' || devName == 'Certification') {
+            // מודרכת, קורס, הכרות, מועדון, העשרה -> הדרכה בים
+            entryType = (devName == 'Course') ? 'קורס' : 'הפלגה';
             baseRate = emp.Rate_Instruction__c != null ? emp.Rate_Instruction__c : 70;
         } else {
+            // כל סוג אחר של הפלגה -> ברירת מחדל הדרכה בים (או כללי אם הוגדר)
             entryType = 'הפלגה';
-            baseRate = emp.Rate_General__c != null ? emp.Rate_General__c : 70;
+            baseRate = emp.Rate_Instruction__c != null ? emp.Rate_Instruction__c : (emp.Rate_General__c != null ? emp.Rate_General__c : 70);
         }
 
         te.Entry_Type__c = entryType;
         te.Base_Rate__c = baseRate;
         te.Description__c = (c.Boat__r != null ? c.Boat__r.Name + ' - ' : '') + (c.RecordType != null ? c.RecordType.Name : '');
 
-        // Calculate Multiplier and Payment based on day of week
-        // DateTime.format('u') returns 1 for Monday through 7 for Sunday
-        // In Israel: Sunday=7 or 1 depending on locale, so let's use date difference:
+        // Calculate Multiplier and Payment based on day of week & Israeli Holidays
         Date sundayRef = Date.newInstance(1900, 1, 7); // A known Sunday
         Integer dayOfWeek = Math.mod(sundayRef.daysBetween(workDate), 7); // 0 = Sunday, 1 = Monday, ..., 5 = Friday, 6 = Saturday
+
+        String dateStr = DateTime.newInstance(workDate, Time.newInstance(0, 0, 0, 0)).format('yyyy-MM-dd');
+        Boolean isFullHoliday = FULL_HOLIDAYS.contains(dateStr);
+        Boolean isEveOfHoliday = EVE_OF_HOLIDAYS.contains(dateStr);
 
         Decimal multiplier = 1.0;
         Decimal regHours = 0;
@@ -237,13 +249,13 @@ public without sharing class StaffTimeTrackingController {
         Decimal ot150 = 0;
         Decimal payment = 0;
 
-        if (dayOfWeek == 6) {
-            // Saturday — 150% holiday multiplier
+        if (isFullHoliday || dayOfWeek == 6) {
+            // Saturday or Full Official Holiday — 150% holiday multiplier
             multiplier = 1.5;
             ot150 = totalHours;
             payment = totalHours * baseRate * 1.5;
-        } else if (dayOfWeek == 5) {
-            // Friday — check Shabbat entry time
+        } else if (isEveOfHoliday || dayOfWeek == 5) {
+            // Friday or Eve of Holiday — check Shabbat / Holiday entry time
             String entryTimeStr = SHABBAT_ENTRY_TIMES.get(month);
             if (entryTimeStr == null) entryTimeStr = '18:00';
 
@@ -261,23 +273,23 @@ public without sharing class StaffTimeTrackingController {
             Decimal entryDec = entryHour + (entryMin / 60.0);
 
             if (endDec <= entryDec) {
-                // Completely before Shabbat entry
+                // Completely before Shabbat / Holiday entry
                 regHours = totalHours;
                 multiplier = 1.0;
                 payment = totalHours * baseRate;
             } else if (startDec >= entryDec) {
-                // Completely after Shabbat entry
+                // Completely after Shabbat / Holiday entry (150%)
                 ot150 = totalHours;
                 multiplier = 1.5;
                 payment = totalHours * baseRate * 1.5;
             } else {
-                // Spans across Shabbat entry
+                // Spans across Shabbat / Holiday entry
                 Decimal beforeHours = (entryDec - startDec).setScale(2, RoundingMode.HALF_UP);
                 Decimal afterHours = (endDec - entryDec).setScale(2, RoundingMode.HALF_UP);
                 regHours = beforeHours;
                 ot150 = afterHours;
-                multiplier = 1.25; // average indicative
                 payment = (beforeHours * baseRate) + (afterHours * baseRate * 1.5);
+                multiplier = totalHours > 0 ? (payment / (totalHours * baseRate)) : 1.0;
             }
         } else {
             // Sunday through Thursday (regular day)
@@ -295,6 +307,7 @@ public without sharing class StaffTimeTrackingController {
                 ot125 = 2;
                 ot150 = totalHours - 10;
                 payment = (8 * baseRate) + (2 * baseRate * 1.25) + (ot150 * baseRate * 1.5);
+                multiplier = totalHours > 0 ? (payment / (totalHours * baseRate)) : 1.0;
             }
         }
 

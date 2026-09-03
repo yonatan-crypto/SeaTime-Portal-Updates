@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Rate_Skipper__c</fullName>
-    <label>תעריף שעתי - סקיפר</label>
-    <type>Currency</type>
+    <label>השכרת יאכטות (צ'רטר)</label>
+    <type>Number</type>
     <precision>18</precision>
     <scale>0</scale>
     <defaultValue>70</defaultValue>
