@@ -3,7 +3,7 @@
     <fullName>Base_Rate__c</fullName>
     <label>תעריף בסיס</label>
     <precision>18</precision>
-    <scale>2</scale>
+    <scale>0</scale>
     <defaultValue>0</defaultValue>
     <type>Currency</type>
 </CustomField>

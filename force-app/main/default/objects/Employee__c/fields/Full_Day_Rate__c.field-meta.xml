@@ -4,6 +4,6 @@
     <label>תעריף יום מלא / חו״ל</label>
     <type>Currency</type>
     <precision>18</precision>
-    <scale>2</scale>
+    <scale>0</scale>
     <defaultValue>590</defaultValue>
 </CustomField>

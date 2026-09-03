@@ -4,6 +4,6 @@
     <label>תעריף קורס</label>
     <type>Currency</type>
     <precision>18</precision>
-    <scale>2</scale>
+    <scale>0</scale>
     <defaultValue>700</defaultValue>
 </CustomField>

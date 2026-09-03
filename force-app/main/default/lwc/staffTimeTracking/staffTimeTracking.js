@@ -85,13 +85,27 @@ export default class StaffTimeTracking extends LightningElement {
                 month: this.selectedMonth
             });
             if (data) {
-                this.summary = data;
+                this.summary = {
+                    ...data,
+                    totalHours: this.formatNum(data.totalHours),
+                    regularHours: this.formatNum(data.regularHours),
+                    overtime125Hours: this.formatNum(data.overtime125Hours),
+                    overtime150Hours: this.formatNum(data.overtime150Hours),
+                    estimatedTotalSalary: this.formatNum(data.estimatedTotalSalary),
+                    travelCostTotal: this.formatNum(data.travelCostTotal)
+                };
             }
         } catch (e) {
             console.error('Error loading monthly report:', e);
         } finally {
             this.isLoading = false;
         }
+    }
+
+    formatNum(n) {
+        if (n === null || n === undefined) return '0';
+        const num = Number(n);
+        return num % 1 === 0 ? String(Math.round(num)) : String(num.toFixed(1));
     }
 
     // Month navigation
@@ -136,7 +150,7 @@ export default class StaffTimeTracking extends LightningElement {
     }
 
     get totalBonusesAndExpenses() {
-        return ((this.summary.totalBonuses || 0) + (this.summary.totalExpenses || 0)).toFixed(2);
+        return this.formatNum((this.summary.totalBonuses || 0) + (this.summary.totalExpenses || 0));
     }
 
     get isMonthlyEmployee() {
@@ -197,11 +211,11 @@ export default class StaffTimeTracking extends LightningElement {
                 typeBadgeClass: badgeClass,
                 description: entry.Description__c || '-',
                 timeRange,
-                totalHours: entry.Total_Hours__c != null ? entry.Total_Hours__c : '-',
-                baseRate: entry.Base_Rate__c || 0,
+                totalHours: entry.Total_Hours__c != null ? this.formatNum(entry.Total_Hours__c) : '-',
+                baseRate: this.formatNum(entry.Base_Rate__c || 0),
                 multiplierText,
                 multiplierBadgeClass,
-                totalPayment: entry.Total_Payment__c != null ? entry.Total_Payment__c : 0,
+                totalPayment: this.formatNum(entry.Total_Payment__c != null ? entry.Total_Payment__c : 0),
                 sourceLabel,
                 sourceBadgeClass,
                 canDelete: !isAuto, // Auto-generated cruises cannot be directly deleted, but can be edited

@@ -70,13 +70,27 @@ export default class AdminAccountantReport extends LightningElement {
         return this.reportRows && this.reportRows.length > 0;
     }
 
+    formatNum(n) {
+        if (n === null || n === undefined) return '0';
+        const num = Number(n);
+        return num % 1 === 0 ? String(Math.round(num)) : String(num.toFixed(1));
+    }
+
     get formattedRows() {
         return this.reportRows.map((r, i) => {
             return {
                 ...r,
                 index: i + 1,
                 jobBadgeClass: r.jobType && r.jobType.includes('מלאה') ? 'badge badge-monthly' : 'badge badge-hourly',
-                bonusReasons: r.bonusReasons || '-'
+                bonusReasons: r.bonusReasons || '-',
+                totalHours: this.formatNum(r.totalHours),
+                grossPayment: this.formatNum(r.grossPayment),
+                bonuses: this.formatNum(r.bonuses),
+                travelPayment: this.formatNum(r.travelPayment),
+                expenseReimbursement: this.formatNum(r.expenseReimbursement),
+                sickDays: this.formatNum(r.sickDays),
+                vacationDays: this.formatNum(r.vacationDays),
+                finalPayment: this.formatNum(r.finalPayment)
             };
         });
     }
@@ -105,15 +119,15 @@ export default class AdminAccountantReport extends LightningElement {
         }
 
         return {
-            hours: hours.toFixed(2),
-            gross: gross.toFixed(2),
-            travel: travel.toFixed(2),
-            bonuses: bonuses.toFixed(2),
-            expenses: expenses.toFixed(2),
-            bonusesAndExpenses: (bonuses + expenses).toFixed(2),
-            sick: sick.toFixed(1),
-            vacation: vacation.toFixed(1),
-            finalPayment: finalPayment.toFixed(2),
+            hours: this.formatNum(hours),
+            gross: this.formatNum(gross),
+            travel: this.formatNum(travel),
+            bonuses: this.formatNum(bonuses),
+            expenses: this.formatNum(expenses),
+            bonusesAndExpenses: this.formatNum(bonuses + expenses),
+            sick: this.formatNum(sick),
+            vacation: this.formatNum(vacation),
+            finalPayment: this.formatNum(finalPayment),
             workDays
         };
     }
@@ -156,16 +170,16 @@ export default class AdminAccountantReport extends LightningElement {
             escapeCsv(r.employeeName),
             escapeCsv(r.jobType),
             escapeCsv(r.workDays),
-            escapeCsv(r.totalHours),
-            escapeCsv(r.grossPayment),
-            escapeCsv(r.bonuses),
+            escapeCsv(this.formatNum(r.totalHours)),
+            escapeCsv(this.formatNum(r.grossPayment)),
+            escapeCsv(this.formatNum(r.bonuses)),
             escapeCsv(r.bonusReasons),
-            escapeCsv(r.travelPayment),
-            escapeCsv(r.expenseReimbursement),
-            escapeCsv(r.sickDays),
-            escapeCsv(r.vacationDays),
+            escapeCsv(this.formatNum(r.travelPayment)),
+            escapeCsv(this.formatNum(r.expenseReimbursement)),
+            escapeCsv(this.formatNum(r.sickDays)),
+            escapeCsv(this.formatNum(r.vacationDays)),
             '0',
-            escapeCsv(r.finalPayment)
+            escapeCsv(this.formatNum(r.finalPayment))
         ]);
 
         const summaryRow = [
