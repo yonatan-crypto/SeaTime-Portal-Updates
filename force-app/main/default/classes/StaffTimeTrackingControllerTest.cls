@@ -175,4 +175,30 @@ private class StaffTimeTrackingControllerTest {
         System.assertNotEquals(null, reportRows);
         Test.stopTest();
     }
+
+    @isTest
+    static void testClubMemberVolunteer() {
+        Employee__c empClub = new Employee__c(
+            Name = 'מדריך חבר מועדון',
+            Employee_Phone__c = '0509998877',
+            Employee_Email__c = 'clubmember@example.com',
+            Employee_Type__c = 'חבר מועדון'
+        );
+        insert empClub;
+
+        Test.startTest();
+        StaffTimeTrackingController.MonthlySummary summary = StaffTimeTrackingController.getMonthlyReport(
+            empClub.Id, 2025, 6
+        );
+        System.assertNotEquals(null, summary);
+        System.assertEquals(0, summary.entries.size(), 'Club members should have no time entries');
+
+        List<StaffTimeTrackingController.AccountantReportRow> reportRows = StaffTimeTrackingController.getAccountantMonthlyReport(
+            2025, 6
+        );
+        for (StaffTimeTrackingController.AccountantReportRow r : reportRows) {
+            System.assertNotEquals(empClub.Id, r.employeeId, 'Club member should not appear in accountant report');
+        }
+        Test.stopTest();
+    }
 }

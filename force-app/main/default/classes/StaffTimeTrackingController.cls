@@ -74,6 +74,11 @@ public without sharing class StaffTimeTrackingController {
         Employee__c emp = emps[0];
         summary.employeeSettings = emp;
 
+        // Club member instructors are volunteers and do not track hours or wages
+        if (emp.Employee_Type__c == 'חבר מועדון') {
+            return summary;
+        }
+
         // Apply defaults if null
         if (emp.Travel_Cost__c == null) emp.Travel_Cost__c = 25;
         if (emp.Full_Day_Rate__c == null) emp.Full_Day_Rate__c = 590;
@@ -438,12 +443,13 @@ public without sharing class StaffTimeTrackingController {
     public static List<AccountantReportRow> getAccountantMonthlyReport(Integer year, Integer month) {
         List<AccountantReportRow> rows = new List<AccountantReportRow>();
 
-        // 1. Fetch all employees
+        // 1. Fetch all employees (excluding volunteer club members)
         List<Employee__c> emps = [
             SELECT Id, Name, Employee_Type__c, Monthly_Salary__c, Job_Percentage__c, Travel_Cost__c,
                    Full_Day_Rate__c, Course_Rate__c, Rate_Instruction__c, Rate_Club__c, Rate_Skipper__c,
                    Rate_Maintenance__c, Rate_Dock_Duty__c, Rate_General__c
             FROM Employee__c
+            WHERE Employee_Type__c != 'חבר מועדון' OR Employee_Type__c = null
             ORDER BY Name ASC
         ];
         if (emps.isEmpty()) return rows;

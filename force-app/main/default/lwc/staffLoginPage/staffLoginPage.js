@@ -211,7 +211,11 @@ export default class StaffLoginPage extends LightningElement {
 
     navigateToApp() {
         this.dispatchEvent(new CustomEvent('authenticated', {
-            detail: { employeeId: this.employeeId, employeeName: this.employeeName }
+            detail: { 
+                employeeId: this.employeeId, 
+                employeeName: this.employeeName,
+                employeeType: this.employeeRecord ? this.employeeRecord.Employee_Type__c : null
+            }
         }));
     }
 }

@@ -49,4 +49,11 @@ public without sharing class StaffPortalController {
                 WHERE Active__c = true 
                 ORDER BY BoatsSchedulerOrder__c];
     }
+
+    @AuraEnabled(cacheable=true)
+    public static Employee__c getEmployeeDetails(Id employeeId) {
+        if (employeeId == null) return null;
+        List<Employee__c> emps = [SELECT Id, Name, Employee_Type__c, Active__c FROM Employee__c WHERE Id = :employeeId LIMIT 1];
+        return emps.isEmpty() ? null : emps[0];
+    }
 }

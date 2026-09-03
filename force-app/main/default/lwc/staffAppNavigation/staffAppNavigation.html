@@ -7,7 +7,9 @@
         <div class="nav-right">
             <div class={cruisesClass} data-page="cruises" onclick={handleNavigate}>📋 ההפלגות שלי</div>
             <div class={calendarClass} data-page="calendar" onclick={handleNavigate}>📅 יומן סירות</div>
-            <div class={timeTrackingClass} data-page="timeTracking" onclick={handleNavigate}>⏱️ דיווח שעות</div>
+            <template if:false={isClubMember}>
+                <div class={timeTrackingClass} data-page="timeTracking" onclick={handleNavigate}>⏱️ דיווח שעות</div>
+            </template>
         </div>
     </div>
 </template>

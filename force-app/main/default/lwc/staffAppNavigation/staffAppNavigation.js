@@ -3,6 +3,11 @@ import { LightningElement, api } from 'lwc';
 export default class StaffAppNavigation extends LightningElement {
     @api currentPage;
     @api employeeName;
+    @api employeeType;
+
+    get isClubMember() {
+        return this.employeeType === 'חבר מועדון';
+    }
 
     get isCalendarActive() {
         return this.currentPage === 'calendar';

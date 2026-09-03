@@ -9,7 +9,7 @@ public without sharing class StaffLoginController {
         String userName = userCredentials.get('userName');
         String password = userCredentials.get('password');
         
-        List<Employee__c> employees = [SELECT Id, Name, Employee_Phone__c, Employee_Email__c, Login_Attempt__c, Is_Strong_Password__c, Strong_Password__c, Active__c 
+        List<Employee__c> employees = [SELECT Id, Name, Employee_Phone__c, Employee_Email__c, Login_Attempt__c, Is_Strong_Password__c, Strong_Password__c, Active__c, Employee_Type__c 
                                        FROM Employee__c 
                                        WHERE Employee_Email__c = :userName LIMIT 1];
         
@@ -57,7 +57,7 @@ public without sharing class StaffLoginController {
     public static Map<String, Object> isValidOtp(Id employeeId, String otp) {
         Map<String, Object> result = new Map<String, Object>();
         
-        List<Employee__c> employees = [SELECT Id, Code__c, Login_Attempt__c FROM Employee__c WHERE Id = :employeeId LIMIT 1];
+        List<Employee__c> employees = [SELECT Id, Name, Code__c, Login_Attempt__c, Employee_Type__c FROM Employee__c WHERE Id = :employeeId LIMIT 1];
         if (employees.isEmpty()) {
             result.put('isOtpValidated', false);
             return result;

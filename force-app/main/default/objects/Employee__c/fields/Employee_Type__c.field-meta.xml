@@ -17,6 +17,11 @@
                 <default>false</default>
                 <label>חודשי</label>
             </value>
+            <value>
+                <fullName>חבר מועדון</fullName>
+                <default>false</default>
+                <label>חבר מועדון</label>
+            </value>
         </valueSetDefinition>
     </valueSet>
 </CustomField>

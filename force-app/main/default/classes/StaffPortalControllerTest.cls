@@ -82,4 +82,16 @@ private class StaffPortalControllerTest {
         
         System.assertNotEquals(0, boats.size());
     }
+
+    @isTest
+    static void testGetEmployeeDetails() {
+        Employee__c emp = [SELECT Id FROM Employee__c LIMIT 1];
+        Test.startTest();
+        Employee__c details = StaffPortalController.getEmployeeDetails(emp.Id);
+        Employee__c nullDetails = StaffPortalController.getEmployeeDetails(null);
+        Test.stopTest();
+
+        System.assertNotEquals(null, details);
+        System.assertEquals(null, nullDetails);
+    }
 }
