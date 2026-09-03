@@ -14,6 +14,7 @@ export default class AdminAccountantReport extends LightningElement {
     @track reportRows = [];
     @track selectedIds = new Set();
     @track searchTerm = '';
+    @track expandedRowIds = new Set();
 
     connectedCallback() {
         this.loadReport();
@@ -68,7 +69,12 @@ export default class AdminAccountantReport extends LightningElement {
         this.searchTerm = event.target.value || '';
     }
 
+    handleCheckboxCellClick(event) {
+        event.stopPropagation();
+    }
+
     handleToggleEmployee(event) {
+        event.stopPropagation();
         const empId = event.target.dataset.id;
         const newSet = new Set(this.selectedIds);
         if (event.target.checked) {
@@ -77,6 +83,18 @@ export default class AdminAccountantReport extends LightningElement {
             newSet.delete(empId);
         }
         this.selectedIds = newSet;
+    }
+
+    handleToggleRowExpand(event) {
+        const empId = event.currentTarget.dataset.id;
+        if (!empId) return;
+        const newSet = new Set(this.expandedRowIds);
+        if (newSet.has(empId)) {
+            newSet.delete(empId);
+        } else {
+            newSet.add(empId);
+        }
+        this.expandedRowIds = newSet;
     }
 
     handleSelectAll() {
@@ -142,14 +160,65 @@ export default class AdminAccountantReport extends LightningElement {
     }
 
     get formattedRows() {
+        const dayNames = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
         return this.visibleRows.map((r, i) => {
             const isSelected = this.selectedIds.has(r.employeeId);
+            const isExpanded = this.expandedRowIds.has(r.employeeId);
+
+            const rawEntries = r.entries || [];
+            const formattedEntries = rawEntries.map((e, idx) => {
+                let formattedDate = '-';
+                let dayName = '';
+                let isWeekend = false;
+                if (e.Work_Date__c) {
+                    const parts = e.Work_Date__c.split('-');
+                    if (parts.length === 3) {
+                        formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                        const d = new Date(Number(parts[0]), Number(parts[1]) - 1, Number(parts[2]));
+                        const dayOfWeek = d.getDay();
+                        dayName = 'יום ' + dayNames[dayOfWeek];
+                        isWeekend = (dayOfWeek === 5 || dayOfWeek === 6);
+                    }
+                }
+
+                const mult = e.Multiplier__c || 1.0;
+                let multiplierText = mult === 1.0 ? '100%' : `${Math.round(mult * 100)}%`;
+
+                const timeRange = (e.Start_Time__c && e.End_Time__c)
+                    ? `${e.Start_Time__c} - ${e.End_Time__c}`
+                    : '-';
+
+                return {
+                    id: e.Id || ('entry-' + idx),
+                    index: idx + 1,
+                    formattedDate,
+                    dayName,
+                    isWeekend,
+                    typeLabel: e.Entry_Type__c || 'הפלגה',
+                    description: e.Description__c || '-',
+                    timeRange,
+                    totalHours: e.Total_Hours__c != null ? this.formatNum(e.Total_Hours__c) : '-',
+                    baseRate: this.formatNum(e.Base_Rate__c || 0),
+                    multiplierText,
+                    totalPayment: this.formatNum(e.Total_Payment__c != null ? e.Total_Payment__c : 0),
+                    rowClass: isWeekend ? 'nested-weekend-row' : ''
+                };
+            });
+
+            const isMonthly = r.jobType && r.jobType.includes('מלאה');
+
             return {
                 ...r,
                 index: i + 1,
                 isSelected,
-                rowClass: isSelected ? '' : 'unselected-row',
-                jobBadgeClass: r.jobType && r.jobType.includes('מלאה') ? 'badge badge-monthly' : 'badge badge-hourly',
+                isExpanded,
+                expandKey: 'exp-' + r.employeeId,
+                expandIcon: isExpanded ? '▼' : '◀',
+                rowClass: (isSelected ? 'data-row' : 'data-row unselected-row') + (isExpanded ? ' is-expanded' : ''),
+                jobBadgeClass: isMonthly ? 'badge badge-monthly' : 'badge badge-hourly',
+                isMonthly,
+                hasBonuses: Number(r.bonuses) > 0,
+                hasExpenses: Number(r.expenseReimbursement) > 0,
                 bonusReasons: r.bonusReasons || '-',
                 totalHours: this.formatNum(r.totalHours),
                 grossPayment: this.formatNum(r.grossPayment),
@@ -158,7 +227,11 @@ export default class AdminAccountantReport extends LightningElement {
                 expenseReimbursement: this.formatNum(r.expenseReimbursement),
                 sickDays: this.formatNum(r.sickDays),
                 vacationDays: this.formatNum(r.vacationDays),
-                finalPayment: this.formatNum(r.finalPayment)
+                finalPayment: this.formatNum(r.finalPayment),
+                baseSalary: this.formatNum(r.baseSalary || 0),
+                travelAllowance: this.formatNum(r.travelAllowance || 25),
+                formattedEntries,
+                hasEntries: formattedEntries.length > 0
             };
         });
     }

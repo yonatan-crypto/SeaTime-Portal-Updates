@@ -388,6 +388,9 @@ public without sharing class StaffTimeTrackingController {
         @AuraEnabled public Decimal sickDays { get; set; }
         @AuraEnabled public Decimal vacationDays { get; set; }
         @AuraEnabled public Decimal finalPayment { get; set; }
+        @AuraEnabled public Decimal baseSalary { get; set; }
+        @AuraEnabled public Decimal travelAllowance { get; set; }
+        @AuraEnabled public List<Time_Entry__c> entries { get; set; }
 
         public AccountantReportRow() {
             workDays = 0;
@@ -400,6 +403,9 @@ public without sharing class StaffTimeTrackingController {
             sickDays = 0;
             vacationDays = 0;
             finalPayment = 0;
+            baseSalary = 0;
+            travelAllowance = 0;
+            entries = new List<Time_Entry__c>();
         }
     }
 
@@ -424,7 +430,9 @@ public without sharing class StaffTimeTrackingController {
 
         // 2. Fetch all Time_Entry__c for the month (Query 2)
         List<Time_Entry__c> allEntries = [
-            SELECT Id, Employee__c, Cruise__c, Work_Date__c, Total_Hours__c, Entry_Type__c, Total_Payment__c, Description__c, Status__c
+            SELECT Id, Employee__c, Cruise__c, Work_Date__c, Start_Time__c, End_Time__c,
+                   Base_Rate__c, Multiplier__c, Total_Hours__c, Entry_Type__c, Total_Payment__c,
+                   Description__c, Status__c
             FROM Time_Entry__c
             WHERE Work_Date__c >= :monthStart
               AND Work_Date__c <= :monthEnd
@@ -530,13 +538,18 @@ public without sharing class StaffTimeTrackingController {
 
             if (isMonthly) {
                 Decimal baseSal = emp.Monthly_Salary__c != null ? emp.Monthly_Salary__c : 0;
+                row.baseSalary = baseSal;
                 row.grossPayment = (baseSal + hourlyPaySum + fullDaysPay + coursesPay).setScale(2, RoundingMode.HALF_UP);
                 row.travelPayment = 250;
+                row.travelAllowance = 250;
             } else {
+                row.baseSalary = 0;
                 row.grossPayment = (hourlyPaySum + fullDaysPay + coursesPay).setScale(2, RoundingMode.HALF_UP);
                 row.travelPayment = (row.workDays * travelAllowance).setScale(2, RoundingMode.HALF_UP);
+                row.travelAllowance = travelAllowance;
             }
 
+            row.entries = empEntries;
             row.finalPayment = (row.grossPayment + row.travelPayment + row.bonuses + row.expenseReimbursement).setScale(2, RoundingMode.HALF_UP);
             rows.add(row);
         }

@@ -94,6 +94,7 @@
                                                onchange={handleToggleSelectAll}
                                                title="בחר / בטל את כולם" />
                                     </th>
+                                    <th class="expand-col"></th>
                                     <th>#</th>
                                     <th>שם עובד</th>
                                     <th>סוג משרה</th>
@@ -111,12 +112,15 @@
                             </thead>
                             <tbody>
                                 <template for:each={formattedRows} for:item="r">
-                                    <tr key={r.employeeId} class={r.rowClass}>
-                                        <td class="checkbox-col">
+                                    <tr key={r.employeeId} class={r.rowClass} onclick={handleToggleRowExpand} data-id={r.employeeId} title="לחץ להצגת / הסתרת פירוט שעות ופעילויות">
+                                        <td class="checkbox-col" onclick={handleCheckboxCellClick}>
                                             <input type="checkbox"
                                                    checked={r.isSelected}
                                                    data-id={r.employeeId}
                                                    onchange={handleToggleEmployee} />
+                                        </td>
+                                        <td class="expand-col">
+                                            <span class="expand-icon">{r.expandIcon}</span>
                                         </td>
                                         <td class="index-cell">{r.index}</td>
                                         <td class="name-cell">
@@ -136,11 +140,84 @@
                                         <td class="num-cell">{r.vacationDays}</td>
                                         <td class="num-cell total-cell">₪{r.finalPayment}</td>
                                     </tr>
+                                    <tr key={r.expandKey} class="details-row" if:true={r.isExpanded}>
+                                        <td colspan="15" class="details-cell">
+                                            <div class="details-container">
+                                                <!-- Header breakdown strip -->
+                                                <div class="details-header-banner">
+                                                    <div class="details-title">
+                                                        <span class="details-icon">📋</span>
+                                                        <strong>הרכב השכר לחודש זה עבור {r.employeeName} ({r.jobType})</strong>
+                                                    </div>
+                                                    <div class="details-summary-pills">
+                                                        <template if:true={r.isMonthly}>
+                                                            <span class="pill salary-pill">🏢 משכורת בסיס: ₪{r.baseSalary}</span>
+                                                        </template>
+                                                        <span class="pill hours-pill">⏱️ שעות עבודה: {r.totalHours} שעות (₪{r.grossPayment})</span>
+                                                        <span class="pill travel-pill">🚗 נסיעות: {r.workDays} ימי עבודה × ₪{r.travelAllowance} = ₪{r.travelPayment}</span>
+                                                        <template if:true={r.hasBonuses}>
+                                                            <span class="pill bonus-pill">🎁 בונוסים: ₪{r.bonuses} ({r.bonusReasons})</span>
+                                                        </template>
+                                                        <template if:true={r.hasExpenses}>
+                                                            <span class="pill expense-pill">🧾 החזר הוצאות: ₪{r.expenseReimbursement}</span>
+                                                        </template>
+                                                        <span class="pill total-pill">💰 סה״כ לתשלום סופי: ₪{r.finalPayment}</span>
+                                                    </div>
+                                                </div>
+
+                                                <!-- Detailed line items sub-table -->
+                                                <div class="nested-table-wrapper">
+                                                    <template if:true={r.hasEntries}>
+                                                        <table class="nested-table">
+                                                            <thead>
+                                                                <tr>
+                                                                    <th>#</th>
+                                                                    <th>תאריך ויום</th>
+                                                                    <th>סוג פעילות</th>
+                                                                    <th>פירוט / הפלגה / סירה</th>
+                                                                    <th>שעות משמרת</th>
+                                                                    <th>סה״כ שעות</th>
+                                                                    <th>תעריף</th>
+                                                                    <th>מכפיל</th>
+                                                                    <th>סכום לתשלום</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                <template for:each={r.formattedEntries} for:item="e">
+                                                                    <tr key={e.id} class={e.rowClass}>
+                                                                        <td class="nested-index">{e.index}</td>
+                                                                        <td>
+                                                                            <span class="nested-date">{e.formattedDate}</span>
+                                                                            <span class="nested-day">{e.dayName}</span>
+                                                                        </td>
+                                                                        <td>
+                                                                            <span class="nested-type-badge">{e.typeLabel}</span>
+                                                                        </td>
+                                                                        <td class="nested-desc">{e.description}</td>
+                                                                        <td class="nested-time">{e.timeRange}</td>
+                                                                        <td class="nested-num bold">{e.totalHours}</td>
+                                                                        <td class="nested-num">{e.baseRate}</td>
+                                                                        <td>
+                                                                            <span class="nested-mult-badge">{e.multiplierText}</span>
+                                                                        </td>
+                                                                        <td class="nested-num nested-pay">₪{e.totalPayment}</td>
+                                                                    </tr>
+                                                                </template>
+                                                            </tbody>
+                                                        </table>
+                                                    </template>
+                                                    <template if:false={r.hasEntries}>
+                                                        <div class="no-entries-msg">אין משמרות או פעילויות מדווחות לחודש זה</div>
+                                                    </template>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
                                 </template>
                             </tbody>
                             <tfoot>
                                 <tr class="summary-row">
-                                    <td colspan="4"><strong>סה״כ למדריכים שנבחרו ({selectedCount})</strong></td>
+                                    <td colspan="5"><strong>סה״כ למדריכים שנבחרו ({selectedCount})</strong></td>
                                     <td class="num-cell">{totals.workDays}</td>
                                     <td class="num-cell bold">{totals.hours}</td>
                                     <td class="num-cell">₪{totals.gross}</td>

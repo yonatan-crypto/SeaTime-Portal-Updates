@@ -365,3 +365,244 @@
     font-size: 48px;
     margin-bottom: 12px;
 }
+
+/* Row Expand Styling */
+.expand-col {
+    width: 32px;
+    text-align: center;
+    padding: 8px 4px !important;
+}
+
+.expand-icon {
+    font-size: 11px;
+    color: #64748b;
+    display: inline-block;
+    transition: transform 0.2s;
+    user-select: none;
+}
+
+.data-row {
+    cursor: pointer;
+    transition: background-color 0.15s;
+}
+
+.data-row:hover td {
+    background-color: #f1f5f9;
+}
+
+.data-row.is-expanded td {
+    background-color: #f0f9ff !important;
+    border-bottom: 1px solid #bae6fd;
+}
+
+.data-row.is-expanded .expand-icon {
+    color: #0288d1;
+    font-weight: bold;
+}
+
+.details-row td {
+    padding: 0 !important;
+    background: #f8fafc;
+    border-bottom: 2px solid #cbd5e1;
+}
+
+.details-container {
+    padding: 16px 24px 20px 24px;
+    background: #f8fafc;
+}
+
+/* Header Banner */
+.details-header-banner {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.details-title {
+    font-size: 15px;
+    color: #0f172a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.details-icon {
+    font-size: 18px;
+}
+
+.details-summary-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #334155;
+    border: 1px solid #e2e8f0;
+}
+
+.pill.salary-pill {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #bfdbfe;
+}
+
+.pill.hours-pill {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #bbf7d0;
+}
+
+.pill.travel-pill {
+    background: #fefce8;
+    color: #a16207;
+    border-color: #fef08a;
+}
+
+.pill.bonus-pill {
+    background: #faf5ff;
+    color: #7e22ce;
+    border-color: #e9d5ff;
+}
+
+.pill.expense-pill {
+    background: #fff7ed;
+    color: #c2410c;
+    border-color: #ffedd5;
+}
+
+.pill.total-pill {
+    background: #0288d1;
+    color: #ffffff;
+    border-color: #0288d1;
+}
+
+/* Nested Sub-Table */
+.nested-table-wrapper {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.nested-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: right;
+    font-size: 12px;
+}
+
+.nested-table th {
+    background: #f1f5f9;
+    color: #475569;
+    padding: 10px 12px;
+    font-weight: 700;
+    border-bottom: 1px solid #cbd5e1;
+    white-space: nowrap;
+}
+
+.nested-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    vertical-align: middle;
+}
+
+.nested-table tr:hover td {
+    background-color: #f8fafc;
+}
+
+.nested-weekend-row td {
+    background-color: #fef3c7 !important;
+}
+
+.nested-index {
+    color: #94a3b8;
+    font-weight: 600;
+    text-align: center;
+    width: 30px;
+}
+
+.nested-date {
+    font-weight: 700;
+    color: #1e293b;
+    margin-left: 6px;
+}
+
+.nested-day {
+    font-size: 11px;
+    color: #64748b;
+}
+
+.nested-desc {
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.nested-time {
+    font-family: monospace;
+    color: #334155;
+    white-space: nowrap;
+}
+
+.nested-num {
+    font-family: monospace;
+    font-size: 12px;
+}
+
+.nested-num.bold {
+    font-weight: 700;
+    color: #0288d1;
+}
+
+.nested-num.nested-pay {
+    font-weight: 800;
+    color: #059669;
+}
+
+.nested-type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #e2e8f0;
+    color: #1e293b;
+}
+
+.nested-mult-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.nested-weekend-row .nested-mult-badge {
+    background: #f59e0b;
+    color: #ffffff;
+}
+
+.no-entries-msg {
+    padding: 24px;
+    text-align: center;
+    color: #94a3b8;
+    font-size: 13px;
+    font-style: italic;
+}
