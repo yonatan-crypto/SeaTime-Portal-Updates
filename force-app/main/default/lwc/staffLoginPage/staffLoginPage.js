@@ -84,7 +84,9 @@ export default class StaffLoginPage extends LightningElement {
                     this.navigateToApp();
                 }
             } else {
-                if (this.employeeRecord && this.employeeRecord.Login_Attempt__c >= 5) {
+                if (result.isInactive) {
+                    this.errorMsg = result.errorMessage || 'חשבון המדריך אינו פעיל. גישתך נחסמה.';
+                } else if (this.employeeRecord && this.employeeRecord.Login_Attempt__c >= 5) {
                     this.showTooManyTries = true;
                     this.errorMsg = 'חשבונך נחסם עקב ניסיונות כניסה רבים. אנא פנה למנהל.';
                 } else {

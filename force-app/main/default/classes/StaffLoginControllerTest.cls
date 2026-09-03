@@ -3,8 +3,26 @@ private class StaffLoginControllerTest {
     
     @testSetup
     static void setup() {
-        Employee__c emp = new Employee__c(Name = 'Test Guide', Employee_Email__c = 'test@example.com', Employee_Phone__c = '0501234567', Login_Attempt__c = 0);
+        Employee__c emp = new Employee__c(Name = 'Test Guide', Employee_Email__c = 'test@example.com', Employee_Phone__c = '0501234567', Login_Attempt__c = 0, Active__c = true);
         insert emp;
+    }
+    
+    @isTest
+    static void testIsValidCredentials_Inactive() {
+        Employee__c emp = [SELECT Id FROM Employee__c LIMIT 1];
+        emp.Active__c = false;
+        update emp;
+
+        Test.startTest();
+        Map<String, String> creds = new Map<String, String>{
+            'userName' => 'test@example.com',
+            'password' => '0501234567'
+        };
+        Map<String, Object> result = StaffLoginController.isValidCredentials(creds);
+        Test.stopTest();
+
+        System.assertEquals(false, result.get('isValidCreds'));
+        System.assertEquals(true, result.get('isInactive'));
     }
     
     @isTest
