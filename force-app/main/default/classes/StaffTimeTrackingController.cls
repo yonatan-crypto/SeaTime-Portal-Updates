@@ -92,16 +92,21 @@ public without sharing class StaffTimeTrackingController {
         DateTime startDateTime = DateTime.newInstance(monthStart, Time.newInstance(0, 0, 0, 0));
         DateTime endDateTime = DateTime.newInstance(monthEnd.addDays(1), Time.newInstance(0, 0, 0, 0));
 
-        // 3. Query existing Time_Entry__c records
+        DateTime now = DateTime.now();
+        DateTime effectiveEndDateTime = (endDateTime > now) ? now : endDateTime;
+        Date effectiveEndDate = effectiveEndDateTime.date();
+
+        // 3. Query existing Time_Entry__c records up to effectiveEndDate
         List<Time_Entry__c> existingEntries = [
             SELECT Id, Name, Employee__c, Cruise__c, Work_Date__c, Start_Time__c, End_Time__c,
                    Total_Hours__c, Regular_Hours__c, Overtime_125_Hours__c, Overtime_150_Hours__c,
                    Entry_Type__c, Base_Rate__c, Multiplier__c, Total_Payment__c, Description__c,
-                   Status__c, Is_Auto_Generated__c, Is_Manual_Edit__c
+                   Status__c, Is_Auto_Generated__c, Is_Manual_Edit__c,
+                   Cruise__r.Start_Date__c, Cruise__r.End_Date__c
             FROM Time_Entry__c
             WHERE Employee__c = :employeeId
               AND Work_Date__c >= :monthStart
-              AND Work_Date__c <= :monthEnd
+              AND Work_Date__c <= :effectiveEndDate
         ];
 
         Set<Id> existingCruiseIds = new Set<Id>();
@@ -111,14 +116,15 @@ public without sharing class StaffTimeTrackingController {
             }
         }
 
-        // 4. Query assigned non-canceled cruises for this employee
+        // 4. Query assigned non-canceled cruises for this employee that have already occurred (performed)
         List<Cruise__c> cruises = [
             SELECT Id, Name, Start_Date__c, End_Date__c, Status__c, Dock_Duty__c,
                    RecordType.Name, RecordType.DeveloperName, Boat__r.Name
             FROM Cruise__c
             WHERE Guide__c = :employeeId
               AND Start_Date__c >= :startDateTime
-              AND Start_Date__c < :endDateTime
+              AND Start_Date__c < :effectiveEndDateTime
+              AND (End_Date__c <= :now OR (End_Date__c = null AND Start_Date__c <= :now))
               AND Status__c != 'Canceled'
             ORDER BY Start_Date__c ASC
         ];
@@ -136,25 +142,38 @@ public without sharing class StaffTimeTrackingController {
             insert newCruiseEntries;
         }
 
-        // 6. Query all entries for the month sorted chronologically
+        // 6. Query all entries for the month up to effectiveEndDate sorted chronologically
         List<Time_Entry__c> allEntries = [
             SELECT Id, Name, Employee__c, Cruise__c, Work_Date__c, Start_Time__c, End_Time__c,
                    Total_Hours__c, Regular_Hours__c, Overtime_125_Hours__c, Overtime_150_Hours__c,
                    Entry_Type__c, Base_Rate__c, Multiplier__c, Total_Payment__c, Description__c,
-                   Status__c, Is_Auto_Generated__c, Is_Manual_Edit__c
+                   Status__c, Is_Auto_Generated__c, Is_Manual_Edit__c,
+                   Cruise__r.Start_Date__c, Cruise__r.End_Date__c
             FROM Time_Entry__c
             WHERE Employee__c = :employeeId
               AND Work_Date__c >= :monthStart
-              AND Work_Date__c <= :monthEnd
+              AND Work_Date__c <= :effectiveEndDate
             ORDER BY Work_Date__c ASC, Start_Time__c ASC
         ];
-        summary.entries = allEntries;
+
+        // Filter out any entries whose cruise has not ended yet
+        List<Time_Entry__c> performedEntries = new List<Time_Entry__c>();
+        for (Time_Entry__c te : allEntries) {
+            if (te.Cruise__c != null && te.Cruise__r.End_Date__c != null && te.Cruise__r.End_Date__c > now) {
+                continue;
+            }
+            if (te.Cruise__c != null && te.Cruise__r.End_Date__c == null && te.Cruise__r.Start_Date__c > now) {
+                continue;
+            }
+            performedEntries.add(te);
+        }
+        summary.entries = performedEntries;
 
         // 7. Calculate aggregate summary
         Set<Date> uniqueWorkDays = new Set<Date>();
         Decimal totalWage = 0;
 
-        for (Time_Entry__c te : allEntries) {
+        for (Time_Entry__c te : performedEntries) {
             if (te.Status__c == 'נדחה') continue;
 
             if (te.Total_Hours__c != null) summary.totalHours += te.Total_Hours__c;
@@ -428,20 +447,33 @@ public without sharing class StaffTimeTrackingController {
         DateTime startDateTime = DateTime.newInstance(monthStart, Time.newInstance(0, 0, 0, 0));
         DateTime endDateTime = DateTime.newInstance(monthEnd.addDays(1), Time.newInstance(0, 0, 0, 0));
 
-        // 2. Fetch all Time_Entry__c for the month (Query 2)
+        DateTime now = DateTime.now();
+        DateTime effectiveEndDateTime = (endDateTime > now) ? now : endDateTime;
+        Date effectiveEndDate = effectiveEndDateTime.date();
+
+        // 2. Fetch all Time_Entry__c for the month up to effectiveEndDate (Query 2)
         List<Time_Entry__c> allEntries = [
             SELECT Id, Employee__c, Cruise__c, Work_Date__c, Start_Time__c, End_Time__c,
                    Base_Rate__c, Multiplier__c, Total_Hours__c, Entry_Type__c, Total_Payment__c,
-                   Description__c, Status__c
+                   Description__c, Status__c,
+                   Cruise__r.Start_Date__c, Cruise__r.End_Date__c
             FROM Time_Entry__c
             WHERE Work_Date__c >= :monthStart
-              AND Work_Date__c <= :monthEnd
+              AND Work_Date__c <= :effectiveEndDate
               AND Status__c != 'נדחה'
         ];
 
         Map<Id, List<Time_Entry__c>> entriesByEmp = new Map<Id, List<Time_Entry__c>>();
         Set<Id> cruisesWithEntries = new Set<Id>();
         for (Time_Entry__c te : allEntries) {
+            // Exclude future cruises that have not completed yet
+            if (te.Cruise__c != null && te.Cruise__r.End_Date__c != null && te.Cruise__r.End_Date__c > now) {
+                continue;
+            }
+            if (te.Cruise__c != null && te.Cruise__r.End_Date__c == null && te.Cruise__r.Start_Date__c > now) {
+                continue;
+            }
+
             if (!entriesByEmp.containsKey(te.Employee__c)) {
                 entriesByEmp.put(te.Employee__c, new List<Time_Entry__c>());
             }
@@ -449,13 +481,14 @@ public without sharing class StaffTimeTrackingController {
             if (te.Cruise__c != null) cruisesWithEntries.add(te.Cruise__c);
         }
 
-        // 3. Pre-fetch all non-canceled cruises in the month in ONE query (Query 3)
+        // 3. Pre-fetch all non-canceled cruises that have already occurred (performed) in ONE query (Query 3)
         List<Cruise__c> monthCruises = [
             SELECT Id, Name, Guide__c, Start_Date__c, End_Date__c, Status__c,
                    RecordType.Name, RecordType.DeveloperName, Boat__r.Name, Dock_Duty__c
             FROM Cruise__c
             WHERE Start_Date__c >= :startDateTime
-              AND Start_Date__c < :endDateTime
+              AND Start_Date__c < :effectiveEndDateTime
+              AND (End_Date__c <= :now OR (End_Date__c = null AND Start_Date__c <= :now))
               AND Status__c != 'Canceled'
               AND Guide__c != null
         ];

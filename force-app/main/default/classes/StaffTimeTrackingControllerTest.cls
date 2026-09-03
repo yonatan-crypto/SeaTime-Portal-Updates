@@ -36,10 +36,12 @@ private class StaffTimeTrackingControllerTest {
 
         RecordType rt = [SELECT Id FROM RecordType WHERE SObjectType = 'Cruise__c' LIMIT 1];
 
-        // Create test Cruises for current month
-        Date today = Date.today();
-        DateTime dtStart = DateTime.newInstance(today, Time.newInstance(9, 0, 0, 0));
-        DateTime dtEnd = DateTime.newInstance(today, Time.newInstance(13, 0, 0, 0));
+        // Create test Cruises for a past month so they have already occurred
+        Integer testYear = 2025;
+        Integer testMonth = 6;
+        Date testDate = Date.newInstance(testYear, testMonth, 10);
+        DateTime dtStart = DateTime.newInstance(testDate, Time.newInstance(9, 0, 0, 0));
+        DateTime dtEnd = DateTime.newInstance(testDate, Time.newInstance(13, 0, 0, 0));
 
         Cruise__c c1 = new Cruise__c(
             RecordTypeId = rt.Id,
@@ -67,17 +69,34 @@ private class StaffTimeTrackingControllerTest {
         );
         insert c2;
 
+        // Also create a FUTURE cruise in current month to verify it is NOT included
+        Cruise__c cFuture = new Cruise__c(
+            RecordTypeId = rt.Id,
+            Boat__c = boat.Id,
+            Guide__c = emp.Id,
+            AccountName__c = acc.Id,
+            Transaction__c = sub.Id,
+            Start_Date__c = DateTime.now().addDays(10),
+            End_Date__c = DateTime.now().addDays(10).addHours(3),
+            Status__c = 'Approved'
+        );
+        insert cFuture;
+
         Test.startTest();
         StaffTimeTrackingController.MonthlySummary summary = StaffTimeTrackingController.getMonthlyReport(
-            emp.Id, today.year(), today.month()
+            emp.Id, testYear, testMonth
         );
         System.assertNotEquals(null, summary, 'Summary should not be null');
-        System.assert(summary.entries.size() >= 2, 'Should have at least 2 entries created');
+        System.assertEquals(2, summary.entries.size(), 'Should only include the 2 performed cruises');
+
+        // Test accountant report
+        List<StaffTimeTrackingController.AccountantReportRow> accountantRows = StaffTimeTrackingController.getAccountantMonthlyReport(testYear, testMonth);
+        System.assertNotEquals(0, accountantRows.size(), 'Should have accountant rows for test month');
 
         // Test Save manual entry
         Time_Entry__c manualEntry = new Time_Entry__c(
             Employee__c = emp.Id,
-            Work_Date__c = today,
+            Work_Date__c = testDate,
             Start_Time__c = '14:00',
             End_Time__c = '18:00',
             Entry_Type__c = 'תחזוקה',
@@ -105,15 +124,14 @@ private class StaffTimeTrackingControllerTest {
         insert emp;
 
         Test.startTest();
-        Date today = Date.today();
         StaffTimeTrackingController.MonthlySummary summary = StaffTimeTrackingController.getMonthlyReport(
-            emp.Id, today.year(), today.month()
+            emp.Id, 2025, 6
         );
         System.assertNotEquals(null, summary);
 
         // Test Accountant Report
         List<StaffTimeTrackingController.AccountantReportRow> reportRows = StaffTimeTrackingController.getAccountantMonthlyReport(
-            today.year(), today.month()
+            2025, 6
         );
         System.assertNotEquals(null, reportRows);
         Test.stopTest();
