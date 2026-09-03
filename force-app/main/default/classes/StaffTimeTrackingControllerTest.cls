@@ -110,6 +110,12 @@ private class StaffTimeTrackingControllerTest {
             emp.Id, today.year(), today.month()
         );
         System.assertNotEquals(null, summary);
+
+        // Test Accountant Report
+        List<StaffTimeTrackingController.AccountantReportRow> reportRows = StaffTimeTrackingController.getAccountantMonthlyReport(
+            today.year(), today.month()
+        );
+        System.assertNotEquals(null, reportRows);
         Test.stopTest();
     }
 }

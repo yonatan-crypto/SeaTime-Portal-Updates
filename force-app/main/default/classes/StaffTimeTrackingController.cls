@@ -360,4 +360,152 @@ public without sharing class StaffTimeTrackingController {
         }
         return false;
     }
+
+    public class AccountantReportRow {
+        @AuraEnabled public String employeeId { get; set; }
+        @AuraEnabled public String employeeName { get; set; }
+        @AuraEnabled public String jobType { get; set; }
+        @AuraEnabled public Integer workDays { get; set; }
+        @AuraEnabled public Decimal totalHours { get; set; }
+        @AuraEnabled public Decimal grossPayment { get; set; }
+        @AuraEnabled public Decimal bonuses { get; set; }
+        @AuraEnabled public String bonusReasons { get; set; }
+        @AuraEnabled public Decimal travelPayment { get; set; }
+        @AuraEnabled public Decimal expenseReimbursement { get; set; }
+        @AuraEnabled public Decimal sickDays { get; set; }
+        @AuraEnabled public Decimal vacationDays { get; set; }
+        @AuraEnabled public Decimal finalPayment { get; set; }
+
+        public AccountantReportRow() {
+            workDays = 0;
+            totalHours = 0;
+            grossPayment = 0;
+            bonuses = 0;
+            bonusReasons = '';
+            travelPayment = 0;
+            expenseReimbursement = 0;
+            sickDays = 0;
+            vacationDays = 0;
+            finalPayment = 0;
+        }
+    }
+
+    @AuraEnabled(cacheable=false)
+    public static List<AccountantReportRow> getAccountantMonthlyReport(Integer year, Integer month) {
+        List<AccountantReportRow> rows = new List<AccountantReportRow>();
+
+        // 1. Fetch all employees
+        List<Employee__c> emps = [
+            SELECT Id, Name, Employee_Type__c, Monthly_Salary__c, Job_Percentage__c, Travel_Cost__c,
+                   Full_Day_Rate__c, Course_Rate__c, Rate_Instruction__c, Rate_Club__c, Rate_Skipper__c,
+                   Rate_Maintenance__c, Rate_Dock_Duty__c, Rate_General__c
+            FROM Employee__c
+            ORDER BY Name ASC
+        ];
+        if (emps.isEmpty()) return rows;
+
+        Date monthStart = Date.newInstance(year, month, 1);
+        Date monthEnd = monthStart.addMonths(1).addDays(-1);
+        DateTime startDateTime = DateTime.newInstance(monthStart, Time.newInstance(0, 0, 0, 0));
+        DateTime endDateTime = DateTime.newInstance(monthEnd.addDays(1), Time.newInstance(0, 0, 0, 0));
+
+        // 2. Fetch all Time_Entry__c for the month
+        List<Time_Entry__c> allEntries = [
+            SELECT Id, Employee__c, Work_Date__c, Total_Hours__c, Entry_Type__c, Total_Payment__c, Description__c, Status__c
+            FROM Time_Entry__c
+            WHERE Work_Date__c >= :monthStart
+              AND Work_Date__c <= :monthEnd
+              AND Status__c != 'נדחה'
+        ];
+
+        Map<Id, List<Time_Entry__c>> entriesByEmp = new Map<Id, List<Time_Entry__c>>();
+        for (Time_Entry__c te : allEntries) {
+            if (!entriesByEmp.containsKey(te.Employee__c)) {
+                entriesByEmp.put(te.Employee__c, new List<Time_Entry__c>());
+            }
+            entriesByEmp.get(te.Employee__c).add(te);
+        }
+
+        // 3. For each employee, generate report row
+        for (Employee__c emp : emps) {
+            List<Time_Entry__c> empEntries = entriesByEmp.get(emp.Id);
+            if (empEntries == null) empEntries = new List<Time_Entry__c>();
+
+            Boolean isMonthly = emp.Employee_Type__c == 'חודשי';
+            if (empEntries.isEmpty() && !isMonthly) {
+                Integer cruiseCount = [
+                    SELECT count() FROM Cruise__c
+                    WHERE Guide__c = :emp.Id AND Start_Date__c >= :startDateTime AND Start_Date__c < :endDateTime AND Status__c != 'Canceled'
+                ];
+                if (cruiseCount == 0) {
+                    continue;
+                } else {
+                    MonthlySummary ms = getMonthlyReport(emp.Id, year, month);
+                    empEntries = ms.entries;
+                }
+            }
+
+            AccountantReportRow row = new AccountantReportRow();
+            row.employeeId = emp.Id;
+            row.employeeName = emp.Name;
+
+            String jobTypeStr = isMonthly ? 'משרה מלאה' : 'שעתי';
+            if (isMonthly && emp.Job_Percentage__c != null && emp.Job_Percentage__c < 100) {
+                jobTypeStr += ' ' + emp.Job_Percentage__c + '%';
+            }
+            row.jobType = jobTypeStr;
+
+            Set<Date> workDaysSet = new Set<Date>();
+            Decimal hoursSum = 0;
+            Decimal hourlyPaySum = 0;
+            Decimal fullDaysPay = 0;
+            Decimal coursesPay = 0;
+            Decimal travelAllowance = emp.Travel_Cost__c != null ? emp.Travel_Cost__c : 25;
+            List<String> bonusReasonsList = new List<String>();
+
+            for (Time_Entry__c te : empEntries) {
+                if (te.Total_Hours__c != null) hoursSum += te.Total_Hours__c;
+
+                if (te.Entry_Type__c == 'בונוס') {
+                    if (te.Total_Payment__c != null) row.bonuses += te.Total_Payment__c;
+                    if (String.isNotBlank(te.Description__c)) bonusReasonsList.add(te.Description__c);
+                } else if (te.Entry_Type__c == 'החזר הוצאות') {
+                    if (te.Total_Payment__c != null) row.expenseReimbursement += te.Total_Payment__c;
+                } else if (te.Entry_Type__c == 'מחלה') {
+                    row.sickDays += (te.Total_Hours__c != null && te.Total_Hours__c > 0 ? (te.Total_Hours__c / 8.0) : 1);
+                } else if (te.Entry_Type__c == 'חופשה') {
+                    row.vacationDays += (te.Total_Hours__c != null && te.Total_Hours__c > 0 ? (te.Total_Hours__c / 8.0) : 1);
+                } else if (te.Entry_Type__c == 'חו״ל / יום מלא') {
+                    if (te.Total_Payment__c != null) fullDaysPay += te.Total_Payment__c;
+                    if (te.Work_Date__c != null) workDaysSet.add(te.Work_Date__c);
+                } else if (te.Entry_Type__c == 'קורס') {
+                    if (te.Total_Payment__c != null) coursesPay += te.Total_Payment__c;
+                    if (te.Work_Date__c != null) workDaysSet.add(te.Work_Date__c);
+                } else {
+                    if (te.Total_Payment__c != null) hourlyPaySum += te.Total_Payment__c;
+                    if (te.Work_Date__c != null && te.Total_Hours__c != null && te.Total_Hours__c > 0) {
+                        workDaysSet.add(te.Work_Date__c);
+                    }
+                }
+            }
+
+            row.workDays = workDaysSet.size();
+            row.totalHours = hoursSum.setScale(2, RoundingMode.HALF_UP);
+            row.bonusReasons = String.join(bonusReasonsList, ', ');
+
+            if (isMonthly) {
+                Decimal baseSal = emp.Monthly_Salary__c != null ? emp.Monthly_Salary__c : 0;
+                row.grossPayment = (baseSal + hourlyPaySum + fullDaysPay + coursesPay).setScale(2, RoundingMode.HALF_UP);
+                row.travelPayment = 250;
+            } else {
+                row.grossPayment = (hourlyPaySum + fullDaysPay + coursesPay).setScale(2, RoundingMode.HALF_UP);
+                row.travelPayment = (row.workDays * travelAllowance).setScale(2, RoundingMode.HALF_UP);
+            }
+
+            row.finalPayment = (row.grossPayment + row.travelPayment + row.bonuses + row.expenseReimbursement).setScale(2, RoundingMode.HALF_UP);
+            rows.add(row);
+        }
+
+        return rows;
+    }
 }

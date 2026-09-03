@@ -1,0 +1,139 @@
+<template>
+    <div class="report-wrapper" dir="rtl">
+        <!-- Top Banner -->
+        <div class="header-card">
+            <div class="header-content">
+                <div class="title-area">
+                    <h2>📊 דוח שכר חודשי למנהלת חשבונות</h2>
+                    <p class="subtitle">ריכוז שעות, תעריפים, נסיעות ומשכורות לכלל עובדי ומדריכי המועדון</p>
+                </div>
+                <div class="actions-area">
+                    <button class="btn btn-export" onclick={handleDownloadExcel} disabled={isLoading}>
+                        <span class="icon">📥</span>
+                        <span>הורד קובץ למנהלת חשבונות (Excel)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Month / Year Selector -->
+            <div class="date-bar">
+                <div class="month-nav">
+                    <button class="nav-btn" onclick={handlePrevMonth}>&rarr;</button>
+                    <span class="current-period">{currentMonthHebrew} {selectedYear}</span>
+                    <button class="nav-btn" onclick={handleNextMonth}>&larr;</button>
+                    <button class="btn-today" onclick={handleThisMonth}>החודש הנוכחי</button>
+                </div>
+                <div class="count-badge">
+                    <span>{employeesCount} עובדים בדוח</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Spinner -->
+        <template if:true={isLoading}>
+            <div class="spinner-box">
+                <lightning-spinner alternative-text="טוען נתונים..." size="medium"></lightning-spinner>
+                <p>מחשב נתוני שכר ושעות לכלל העובדים...</p>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <!-- Totals KPI Strip -->
+            <div class="kpi-strip">
+                <div class="kpi-box">
+                    <div class="kpi-title">סה״כ שעות</div>
+                    <div class="kpi-num">{totals.hours}</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-title">שכר ברוטו</div>
+                    <div class="kpi-num">₪{totals.gross}</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-title">דמי נסיעות</div>
+                    <div class="kpi-num">₪{totals.travel}</div>
+                </div>
+                <div class="kpi-box">
+                    <div class="kpi-title">בונוסים והוצאות</div>
+                    <div class="kpi-num">₪{totals.bonusesAndExpenses}</div>
+                </div>
+                <div class="kpi-box highlight">
+                    <div class="kpi-title">סה״כ לתשלום סופי</div>
+                    <div class="kpi-num green">₪{totals.finalPayment}</div>
+                </div>
+            </div>
+
+            <!-- Data Table -->
+            <div class="table-card">
+                <template if:true={hasRows}>
+                    <div class="table-scroll">
+                        <table class="report-table">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>שם עובד</th>
+                                    <th>סוג משרה</th>
+                                    <th>ימי עבודה</th>
+                                    <th>סה״כ שעות</th>
+                                    <th>שכר ברוטו</th>
+                                    <th>בונוס</th>
+                                    <th>סיבה לבונוס</th>
+                                    <th>החזר נסיעות</th>
+                                    <th>החזר הוצאות</th>
+                                    <th>ימי מחלה</th>
+                                    <th>ימי חופשה</th>
+                                    <th>סה״כ לתשלום</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={formattedRows} for:item="r">
+                                    <tr key={r.employeeId}>
+                                        <td class="index-cell">{r.index}</td>
+                                        <td class="name-cell">
+                                            <strong>{r.employeeName}</strong>
+                                        </td>
+                                        <td>
+                                            <span class={r.jobBadgeClass}>{r.jobType}</span>
+                                        </td>
+                                        <td class="num-cell">{r.workDays}</td>
+                                        <td class="num-cell bold">{r.totalHours}</td>
+                                        <td class="num-cell">₪{r.grossPayment}</td>
+                                        <td class="num-cell">₪{r.bonuses}</td>
+                                        <td class="text-cell" title={r.bonusReasons}>{r.bonusReasons}</td>
+                                        <td class="num-cell">₪{r.travelPayment}</td>
+                                        <td class="num-cell">₪{r.expenseReimbursement}</td>
+                                        <td class="num-cell">{r.sickDays}</td>
+                                        <td class="num-cell">{r.vacationDays}</td>
+                                        <td class="num-cell total-cell">₪{r.finalPayment}</td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                            <tfoot>
+                                <tr class="summary-row">
+                                    <td colspan="3"><strong>סה״כ כללי</strong></td>
+                                    <td class="num-cell">{totals.workDays}</td>
+                                    <td class="num-cell bold">{totals.hours}</td>
+                                    <td class="num-cell">₪{totals.gross}</td>
+                                    <td class="num-cell">₪{totals.bonuses}</td>
+                                    <td></td>
+                                    <td class="num-cell">₪{totals.travel}</td>
+                                    <td class="num-cell">₪{totals.expenses}</td>
+                                    <td class="num-cell">{totals.sick}</td>
+                                    <td class="num-cell">{totals.vacation}</td>
+                                    <td class="num-cell total-cell">₪{totals.finalPayment}</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </template>
+
+                <template if:false={hasRows}>
+                    <div class="empty-box">
+                        <div class="empty-icon">📂</div>
+                        <h3>אין נתוני שכר לחודש זה</h3>
+                        <p>הנתונים מתעדכנים אוטומטית בהתאם להפלגות ולדיווחים שבוצעו.</p>
+                    </div>
+                </template>
+            </div>
+        </template>
+    </div>
+</template>
