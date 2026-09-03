@@ -1,5 +1,8 @@
 <template>
     <div class="report-wrapper" dir="rtl">
+        <!-- Hidden download anchor inside shadow DOM -->
+        <a data-id="downloadLink" style="display:none" download="report.csv"></a>
+
         <!-- Top Banner -->
         <div class="header-card">
             <div class="header-content">
@@ -8,23 +11,39 @@
                     <p class="subtitle">ריכוז שעות, תעריפים, נסיעות ומשכורות לכלל עובדי ומדריכי המועדון</p>
                 </div>
                 <div class="actions-area">
-                    <button class="btn btn-export" onclick={handleDownloadExcel} disabled={isLoading}>
+                    <button class="btn btn-export" onclick={handleDownloadExcel} disabled={isExportDisabled}>
                         <span class="icon">📥</span>
                         <span>הורד קובץ למנהלת חשבונות (Excel)</span>
                     </button>
                 </div>
             </div>
 
-            <!-- Month / Year Selector -->
-            <div class="date-bar">
+            <!-- Month / Year & Filters Bar -->
+            <div class="controls-bar">
                 <div class="month-nav">
-                    <button class="nav-btn" onclick={handlePrevMonth}>&rarr;</button>
+                    <button class="nav-btn" onclick={handlePrevMonth} title="חודש קודם">&rarr;</button>
                     <span class="current-period">{currentMonthHebrew} {selectedYear}</span>
-                    <button class="nav-btn" onclick={handleNextMonth}>&larr;</button>
+                    <button class="nav-btn" onclick={handleNextMonth} title="חודש הבא">&larr;</button>
                     <button class="btn-today" onclick={handleThisMonth}>החודש הנוכחי</button>
                 </div>
-                <div class="count-badge">
-                    <span>{employeesCount} עובדים בדוח</span>
+
+                <!-- Instructor Search & Selection Controls -->
+                <div class="filter-controls">
+                    <div class="search-input-wrapper">
+                        <span class="search-icon">🔍</span>
+                        <input type="text"
+                               class="search-input"
+                               placeholder="חיפוש מדריך לפי שם..."
+                               value={searchTerm}
+                               oninput={handleSearchChange} />
+                    </div>
+                    <div class="selection-buttons">
+                        <button class="btn-action" onclick={handleSelectAll}>סמן הכל</button>
+                        <button class="btn-action" onclick={handleDeselectAll}>נקה בחירה</button>
+                    </div>
+                    <div class="count-badge">
+                        <span>{selectedCount} מתוך {employeesCount} מדריכים נבחרו</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -41,7 +60,7 @@
             <!-- Totals KPI Strip -->
             <div class="kpi-strip">
                 <div class="kpi-box">
-                    <div class="kpi-title">סה״כ שעות</div>
+                    <div class="kpi-title">סה״כ שעות (מסומנים)</div>
                     <div class="kpi-num">{totals.hours}</div>
                 </div>
                 <div class="kpi-box">
@@ -64,11 +83,17 @@
 
             <!-- Data Table -->
             <div class="table-card">
-                <template if:true={hasRows}>
+                <template if:true={hasVisibleRows}>
                     <div class="table-scroll">
                         <table class="report-table">
                             <thead>
                                 <tr>
+                                    <th class="checkbox-col">
+                                        <input type="checkbox"
+                                               checked={isAllVisibleSelected}
+                                               onchange={handleToggleSelectAll}
+                                               title="בחר / בטל את כולם" />
+                                    </th>
                                     <th>#</th>
                                     <th>שם עובד</th>
                                     <th>סוג משרה</th>
@@ -86,7 +111,13 @@
                             </thead>
                             <tbody>
                                 <template for:each={formattedRows} for:item="r">
-                                    <tr key={r.employeeId}>
+                                    <tr key={r.employeeId} class={r.rowClass}>
+                                        <td class="checkbox-col">
+                                            <input type="checkbox"
+                                                   checked={r.isSelected}
+                                                   data-id={r.employeeId}
+                                                   onchange={handleToggleEmployee} />
+                                        </td>
                                         <td class="index-cell">{r.index}</td>
                                         <td class="name-cell">
                                             <strong>{r.employeeName}</strong>
@@ -109,7 +140,7 @@
                             </tbody>
                             <tfoot>
                                 <tr class="summary-row">
-                                    <td colspan="3"><strong>סה״כ כללי</strong></td>
+                                    <td colspan="4"><strong>סה״כ למדריכים שנבחרו ({selectedCount})</strong></td>
                                     <td class="num-cell">{totals.workDays}</td>
                                     <td class="num-cell bold">{totals.hours}</td>
                                     <td class="num-cell">₪{totals.gross}</td>
@@ -126,11 +157,11 @@
                     </div>
                 </template>
 
-                <template if:false={hasRows}>
+                <template if:false={hasVisibleRows}>
                     <div class="empty-box">
-                        <div class="empty-icon">📂</div>
-                        <h3>אין נתוני שכר לחודש זה</h3>
-                        <p>הנתונים מתעדכנים אוטומטית בהתאם להפלגות ולדיווחים שבוצעו.</p>
+                        <div class="empty-icon">🔍</div>
+                        <h3>לא נמצאו מדריכים התואמים לחיפוש</h3>
+                        <p>נסה לשנות את מילת החיפוש או לבחור חודש אחר.</p>
                     </div>
                 </template>
             </div>

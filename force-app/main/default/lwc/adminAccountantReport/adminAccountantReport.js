@@ -1,4 +1,5 @@
 import { LightningElement, track } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import getAccountantMonthlyReport from '@salesforce/apex/StaffTimeTrackingController.getAccountantMonthlyReport';
 
 const HEBREW_MONTHS = [
@@ -11,6 +12,8 @@ export default class AdminAccountantReport extends LightningElement {
     @track selectedMonth = new Date().getMonth() + 1;
     @track isLoading = true;
     @track reportRows = [];
+    @track selectedIds = new Set();
+    @track searchTerm = '';
 
     connectedCallback() {
         this.loadReport();
@@ -24,8 +27,11 @@ export default class AdminAccountantReport extends LightningElement {
                 month: this.selectedMonth
             });
             this.reportRows = data || [];
+            // By default, select all employees
+            this.selectedIds = new Set(this.reportRows.map(r => r.employeeId));
         } catch (e) {
             console.error('Error fetching accountant report:', e);
+            this.showToast('שגיאה', 'לא ניתן לטעון את נתוני הדוח: ' + (e.body ? e.body.message : e.message), 'error');
         } finally {
             this.isLoading = false;
         }
@@ -58,16 +64,39 @@ export default class AdminAccountantReport extends LightningElement {
         this.loadReport();
     }
 
-    get currentMonthHebrew() {
-        return HEBREW_MONTHS[this.selectedMonth - 1] || '';
+    handleSearchChange(event) {
+        this.searchTerm = event.target.value || '';
     }
 
-    get employeesCount() {
-        return this.reportRows.length;
+    handleToggleEmployee(event) {
+        const empId = event.target.dataset.id;
+        const newSet = new Set(this.selectedIds);
+        if (event.target.checked) {
+            newSet.add(empId);
+        } else {
+            newSet.delete(empId);
+        }
+        this.selectedIds = newSet;
     }
 
-    get hasRows() {
-        return this.reportRows && this.reportRows.length > 0;
+    handleSelectAll() {
+        const newSet = new Set(this.selectedIds);
+        this.visibleRows.forEach(r => newSet.add(r.employeeId));
+        this.selectedIds = newSet;
+    }
+
+    handleDeselectAll() {
+        const newSet = new Set(this.selectedIds);
+        this.visibleRows.forEach(r => newSet.delete(r.employeeId));
+        this.selectedIds = newSet;
+    }
+
+    handleToggleSelectAll(event) {
+        if (event.target.checked) {
+            this.handleSelectAll();
+        } else {
+            this.handleDeselectAll();
+        }
     }
 
     formatNum(n) {
@@ -76,11 +105,50 @@ export default class AdminAccountantReport extends LightningElement {
         return num % 1 === 0 ? String(Math.round(num)) : String(num.toFixed(1));
     }
 
+    get currentMonthHebrew() {
+        return HEBREW_MONTHS[this.selectedMonth - 1] || '';
+    }
+
+    get employeesCount() {
+        return this.reportRows.length;
+    }
+
+    get selectedCount() {
+        return this.selectedIds.size;
+    }
+
+    get isExportDisabled() {
+        return this.isLoading || this.selectedCount === 0;
+    }
+
+    get visibleRows() {
+        if (!this.searchTerm.trim()) {
+            return this.reportRows;
+        }
+        const term = this.searchTerm.trim().toLowerCase();
+        return this.reportRows.filter(r =>
+            (r.employeeName && r.employeeName.toLowerCase().includes(term)) ||
+            (r.jobType && r.jobType.toLowerCase().includes(term))
+        );
+    }
+
+    get hasVisibleRows() {
+        return this.visibleRows && this.visibleRows.length > 0;
+    }
+
+    get isAllVisibleSelected() {
+        if (!this.hasVisibleRows) return false;
+        return this.visibleRows.every(r => this.selectedIds.has(r.employeeId));
+    }
+
     get formattedRows() {
-        return this.reportRows.map((r, i) => {
+        return this.visibleRows.map((r, i) => {
+            const isSelected = this.selectedIds.has(r.employeeId);
             return {
                 ...r,
                 index: i + 1,
+                isSelected,
+                rowClass: isSelected ? '' : 'unselected-row',
                 jobBadgeClass: r.jobType && r.jobType.includes('מלאה') ? 'badge badge-monthly' : 'badge badge-hourly',
                 bonusReasons: r.bonusReasons || '-',
                 totalHours: this.formatNum(r.totalHours),
@@ -107,6 +175,9 @@ export default class AdminAccountantReport extends LightningElement {
         let workDays = 0;
 
         for (const r of this.reportRows) {
+            // Only sum selected employees!
+            if (!this.selectedIds.has(r.employeeId)) continue;
+
             hours += (r.totalHours || 0);
             gross += (r.grossPayment || 0);
             travel += (r.travelPayment || 0);
@@ -133,8 +204,8 @@ export default class AdminAccountantReport extends LightningElement {
     }
 
     handleDownloadExcel() {
-        if (!this.hasRows) {
-            alert('אין נתונים להורדה לחודש זה');
+        if (this.selectedCount === 0) {
+            this.showToast('שים לב', 'לא נבחרו מדריכים לייצוא', 'warning');
             return;
         }
 
@@ -166,7 +237,10 @@ export default class AdminAccountantReport extends LightningElement {
             'סה״כ לתשלום'
         ];
 
-        const rows = this.reportRows.map(r => [
+        // Export ONLY selected employees!
+        const exportRows = this.reportRows.filter(r => this.selectedIds.has(r.employeeId));
+
+        const rows = exportRows.map(r => [
             escapeCsv(r.employeeName),
             escapeCsv(r.jobType),
             escapeCsv(r.workDays),
@@ -183,7 +257,7 @@ export default class AdminAccountantReport extends LightningElement {
         ]);
 
         const summaryRow = [
-            escapeCsv('סה״כ כללי'),
+            escapeCsv(`סה״כ (${this.selectedCount} עובדים)`),
             '',
             escapeCsv(this.totals.workDays),
             escapeCsv(this.totals.hours),
@@ -207,13 +281,52 @@ export default class AdminAccountantReport extends LightningElement {
         ];
 
         const csvContent = csvLines.join('\r\n');
-        // Add UTF-8 BOM so Excel opens Hebrew without garbled characters
-        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.setAttribute('download', `דוח_שכר_למנהלת_חשבונות_${monthName}_${year}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
+        const filename = `דוח_שכר_למנהלת_חשבונות_${monthName}_${year}.csv`;
+
+        this.triggerDownload(filename, csvContent);
+    }
+
+    triggerDownload(filename, csvContent) {
+        try {
+            // Method 1: Data URI on template anchor (most reliable in Lightning Locker)
+            const link = this.template.querySelector('[data-id="downloadLink"]');
+            if (link) {
+                const encodedUri = 'data:text/csv;charset=utf-8,%EF%BB%BF' + encodeURIComponent(csvContent);
+                link.setAttribute('href', encodedUri);
+                link.setAttribute('download', filename);
+                link.click();
+                this.showToast('הצלחה', `קובץ הדוח (${filename}) הורד בהצלחה!`, 'success');
+                return;
+            }
+
+            // Method 2: Blob fallback
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            if (window.navigator && window.navigator.msSaveOrOpenBlob) {
+                window.navigator.msSaveOrOpenBlob(blob, filename);
+            } else {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
+            this.showToast('הצלחה', `קובץ הדוח (${filename}) הורד בהצלחה!`, 'success');
+        } catch (err) {
+            console.error('Download error:', err);
+            this.showToast('שגיאה בהורדה', err.message, 'error');
+        }
+    }
+
+    showToast(title, message, variant) {
+        try {
+            this.dispatchEvent(new ShowToastEvent({
+                title,
+                message,
+                variant
+            }));
+        } catch (e) {
+            console.log(title, message);
+        }
     }
 }
