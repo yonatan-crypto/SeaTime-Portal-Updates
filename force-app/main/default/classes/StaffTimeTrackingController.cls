@@ -409,9 +409,9 @@ public without sharing class StaffTimeTrackingController {
         DateTime startDateTime = DateTime.newInstance(monthStart, Time.newInstance(0, 0, 0, 0));
         DateTime endDateTime = DateTime.newInstance(monthEnd.addDays(1), Time.newInstance(0, 0, 0, 0));
 
-        // 2. Fetch all Time_Entry__c for the month
+        // 2. Fetch all Time_Entry__c for the month (Query 2)
         List<Time_Entry__c> allEntries = [
-            SELECT Id, Employee__c, Work_Date__c, Total_Hours__c, Entry_Type__c, Total_Payment__c, Description__c, Status__c
+            SELECT Id, Employee__c, Cruise__c, Work_Date__c, Total_Hours__c, Entry_Type__c, Total_Payment__c, Description__c, Status__c
             FROM Time_Entry__c
             WHERE Work_Date__c >= :monthStart
               AND Work_Date__c <= :monthEnd
@@ -419,30 +419,52 @@ public without sharing class StaffTimeTrackingController {
         ];
 
         Map<Id, List<Time_Entry__c>> entriesByEmp = new Map<Id, List<Time_Entry__c>>();
+        Set<Id> cruisesWithEntries = new Set<Id>();
         for (Time_Entry__c te : allEntries) {
             if (!entriesByEmp.containsKey(te.Employee__c)) {
                 entriesByEmp.put(te.Employee__c, new List<Time_Entry__c>());
             }
             entriesByEmp.get(te.Employee__c).add(te);
+            if (te.Cruise__c != null) cruisesWithEntries.add(te.Cruise__c);
         }
 
-        // 3. For each employee, generate report row
+        // 3. Pre-fetch all non-canceled cruises in the month in ONE query (Query 3)
+        List<Cruise__c> monthCruises = [
+            SELECT Id, Name, Guide__c, Start_Date__c, End_Date__c, Status__c,
+                   RecordType.Name, RecordType.DeveloperName, Boat__r.Name, Dock_Duty__c
+            FROM Cruise__c
+            WHERE Start_Date__c >= :startDateTime
+              AND Start_Date__c < :endDateTime
+              AND Status__c != 'Canceled'
+              AND Guide__c != null
+        ];
+
+        Map<Id, List<Cruise__c>> cruisesByEmp = new Map<Id, List<Cruise__c>>();
+        for (Cruise__c c : monthCruises) {
+            if (!cruisesWithEntries.contains(c.Id)) {
+                if (!cruisesByEmp.containsKey(c.Guide__c)) {
+                    cruisesByEmp.put(c.Guide__c, new List<Cruise__c>());
+                }
+                cruisesByEmp.get(c.Guide__c).add(c);
+            }
+        }
+
+        // 4. Process each employee (In-Memory!)
         for (Employee__c emp : emps) {
             List<Time_Entry__c> empEntries = entriesByEmp.get(emp.Id);
             if (empEntries == null) empEntries = new List<Time_Entry__c>();
 
+            // Add cruise entries if any were not yet created as Time_Entry__c
+            List<Cruise__c> empCruises = cruisesByEmp.get(emp.Id);
+            if (empCruises != null && !empCruises.isEmpty()) {
+                for (Cruise__c c : empCruises) {
+                    empEntries.add(createEntryFromCruise(c, emp, month));
+                }
+            }
+
             Boolean isMonthly = emp.Employee_Type__c == 'חודשי';
             if (empEntries.isEmpty() && !isMonthly) {
-                Integer cruiseCount = [
-                    SELECT count() FROM Cruise__c
-                    WHERE Guide__c = :emp.Id AND Start_Date__c >= :startDateTime AND Start_Date__c < :endDateTime AND Status__c != 'Canceled'
-                ];
-                if (cruiseCount == 0) {
-                    continue;
-                } else {
-                    MonthlySummary ms = getMonthlyReport(emp.Id, year, month);
-                    empEntries = ms.entries;
-                }
+                continue;
             }
 
             AccountantReportRow row = new AccountantReportRow();
