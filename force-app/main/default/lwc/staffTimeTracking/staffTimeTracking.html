@@ -1,0 +1,274 @@
+<template>
+    <div class="time-tracking-container" dir="rtl">
+        <!-- Header Bar -->
+        <div class="header-card">
+            <div class="header-top">
+                <div class="title-area">
+                    <h2 class="main-title">⏱️ דיווח ורישום שעות</h2>
+                    <p class="subtitle">ריכוז שעות חודשי, הפלגות ותחשיב שכר משוער</p>
+                </div>
+                <div class="action-area">
+                    <button class="btn btn-primary btn-new-entry" onclick={openNewEntryModal}>
+                        <span>+ דיווח חדש</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Month / Year Selector -->
+            <div class="month-selector">
+                <button class="nav-arrow" onclick={handlePreviousMonth}>&rarr;</button>
+                <div class="current-month-display">
+                    <span class="month-name">{currentMonthHebrew}</span>
+                    <span class="year-name">{selectedYear}</span>
+                </div>
+                <button class="nav-arrow" onclick={handleNextMonth}>&larr;</button>
+                <button class="btn btn-today" onclick={handleCurrentMonth}>החודש הנוכחי</button>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <div class="spinner-container">
+                <div class="spinner"></div>
+                <span>טוען נתוני שעות...</span>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <!-- KPI Summary Cards -->
+            <div class="kpi-grid">
+                <!-- Total Hours -->
+                <div class="kpi-card hours-card">
+                    <div class="kpi-icon">🕒</div>
+                    <div class="kpi-content">
+                        <div class="kpi-label">סה״כ שעות החודש</div>
+                        <div class="kpi-value">{summary.totalHours} שעות</div>
+                        <div class="kpi-detail">
+                            <span>רגיל: {summary.regularHours}</span>
+                            <span if:true={hasOvertime125}> | 125%: {summary.overtime125Hours}</span>
+                            <span if:true={hasOvertime150}> | 150%: {summary.overtime150Hours}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Work Days & Travel -->
+                <div class="kpi-card days-card">
+                    <div class="kpi-icon">🚗</div>
+                    <div class="kpi-content">
+                        <div class="kpi-label">ימי עבודה ונסיעות</div>
+                        <div class="kpi-value">{summary.workDaysCount} ימים</div>
+                        <div class="kpi-detail">
+                            <span>דמי נסיעות: ₪{summary.totalTravel}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bonuses & Expenses -->
+                <div class="kpi-card bonus-card">
+                    <div class="kpi-icon">🎁</div>
+                    <div class="kpi-content">
+                        <div class="kpi-label">בונוסים והוצאות</div>
+                        <div class="kpi-value">₪{totalBonusesAndExpenses}</div>
+                        <div class="kpi-detail">
+                            <span>בונוסים: ₪{summary.totalBonuses} | הוצאות: ₪{summary.totalExpenses}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estimated Total Salary -->
+                <div class="kpi-card salary-card">
+                    <div class="kpi-icon">💰</div>
+                    <div class="kpi-content">
+                        <div class="kpi-label">שכר חודשי משוער</div>
+                        <div class="kpi-value highlight-salary">₪{summary.estimatedSalary}</div>
+                        <div class="kpi-detail">
+                            <span if:true={isMonthlyEmployee}>עובד במשכורת חודשית</span>
+                            <span if:false={isMonthlyEmployee}>שכר שעתי + נסיעות ותוספות</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table of Monthly Shift Entries -->
+            <div class="table-card">
+                <div class="table-header">
+                    <h3>פירוט פעילויות ומשמרות בחודש ({formattedEntriesCount})</h3>
+                </div>
+
+                <template if:true={hasEntries}>
+                    <div class="table-responsive">
+                        <table class="shifts-table">
+                            <thead>
+                                <tr>
+                                    <th>תאריך ויום</th>
+                                    <th>סוג פעילות</th>
+                                    <th>פירוט / הפלגה</th>
+                                    <th>שעות</th>
+                                    <th>סה״כ שעות</th>
+                                    <th>תעריף</th>
+                                    <th>מכפיל</th>
+                                    <th>שכר משוער</th>
+                                    <th>מקור</th>
+                                    <th>פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <template for:each={formattedEntries} for:item="item">
+                                    <tr key={item.id} class={item.rowClass}>
+                                        <td class="date-cell">
+                                            <div class="date-text">{item.formattedDate}</div>
+                                            <div class="day-text">{item.dayName}</div>
+                                        </td>
+                                        <td>
+                                            <span class={item.typeBadgeClass}>{item.typeLabel}</span>
+                                        </td>
+                                        <td class="desc-cell">{item.description}</td>
+                                        <td class="time-cell">{item.timeRange}</td>
+                                        <td class="hours-cell">{item.totalHours}</td>
+                                        <td>₪{item.baseRate}</td>
+                                        <td>
+                                            <span class={item.multiplierBadgeClass}>{item.multiplierText}</span>
+                                        </td>
+                                        <td class="payment-cell">₪{item.totalPayment}</td>
+                                        <td>
+                                            <span class={item.sourceBadgeClass}>{item.sourceLabel}</span>
+                                        </td>
+                                        <td class="actions-cell">
+                                            <button class="action-btn edit-btn" title="עריכת שעות" data-id={item.id} onclick={handleEditEntry}>✏️</button>
+                                            <template if:true={item.canDelete}>
+                                                <button class="action-btn delete-btn" title="מחיקה" data-id={item.id} onclick={handleDeleteEntry}>🗑️</button>
+                                            </template>
+                                        </td>
+                                    </tr>
+                                </template>
+                            </tbody>
+                        </table>
+                    </div>
+                </template>
+
+                <template if:false={hasEntries}>
+                    <div class="empty-state">
+                        <div class="empty-icon">📅</div>
+                        <h4>אין פעילויות או דיווחים בחודש זה</h4>
+                        <p>הפלגות ששובצת בהן יופיעו כאן אוטומטית, או שתוכל ללחוץ על "+ דיווח חדש".</p>
+                    </div>
+                </template>
+            </div>
+        </template>
+
+        <!-- New Entry Modal -->
+        <template if:true={isNewEntryModalOpen}>
+            <div class="modal-backdrop">
+                <div class="modal-card">
+                    <div class="modal-header">
+                        <h3>+ דיווח חדש</h3>
+                        <button class="close-btn" onclick={closeNewEntryModal}>&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <!-- Entry Type Selection -->
+                        <div class="form-group">
+                            <label class="form-label">סוג דיווח</label>
+                            <select class="form-select" value={newEntryType} onchange={handleNewEntryTypeChange}>
+                                <option value="תורנות רציף">תורנות רציף</option>
+                                <option value="תחזוקה">תחזוקה</option>
+                                <option value="הפלגה">שעות עבודה / הפלגה ידנית</option>
+                                <option value="חו״ל / יום מלא">פעילות חו״ל / יום מלא</option>
+                                <option value="קורס">קורס</option>
+                                <option value="בונוס">בונוס</option>
+                                <option value="החזר הוצאות">החזר הוצאות</option>
+                                <option value="מחלה">יום מחלה</option>
+                                <option value="חופשה">יום חופשה</option>
+                            </select>
+                        </div>
+
+                        <!-- Date -->
+                        <div class="form-group">
+                            <label class="form-label">תאריך</label>
+                            <input type="date" class="form-input" value={newEntryDate} onchange={handleNewDateChange} />
+                        </div>
+
+                        <!-- Start and End Time (for hours-based entries) -->
+                        <template if:true={isHoursBasedType}>
+                            <div class="form-row">
+                                <div class="form-group half">
+                                    <label class="form-label">שעת התחלה</label>
+                                    <input type="time" class="form-input" value={newStartTime} onchange={handleNewStartTimeChange} />
+                                </div>
+                                <div class="form-group half">
+                                    <label class="form-label">שעת סיום</label>
+                                    <input type="time" class="form-input" value={newEndTime} onchange={handleNewEndTimeChange} />
+                                </div>
+                            </div>
+                        </template>
+
+                        <!-- Amount (for bonus / expenses) -->
+                        <template if:true={isAmountBasedType}>
+                            <div class="form-group">
+                                <label class="form-label">סכום בש״ח</label>
+                                <input type="number" step="any" class="form-input" placeholder="0.00" value={newAmount} onchange={handleNewAmountChange} />
+                            </div>
+                        </template>
+
+                        <!-- Description / Notes -->
+                        <div class="form-group">
+                            <label class="form-label">תיאור / הערות</label>
+                            <input type="text" class="form-input" placeholder="פירוט הפעילות..." value={newDescription} onchange={handleNewDescriptionChange} />
+                        </div>
+
+                        <template if:true={modalError}>
+                            <div class="modal-error">{modalError}</div>
+                        </template>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick={closeNewEntryModal}>ביטול</button>
+                        <button class="btn btn-primary" onclick={handleSaveNewEntry} disabled={isSubmitting}>שמור דיווח</button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <!-- Edit Entry Modal -->
+        <template if:true={isEditModalOpen}>
+            <div class="modal-backdrop">
+                <div class="modal-card">
+                    <div class="modal-header">
+                        <h3>עריכת דיווח / שעות</h3>
+                        <button class="close-btn" onclick={closeEditModal}>&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="edit-info-text">{editingEntryDesc}</p>
+
+                        <div class="form-group">
+                            <label class="form-label">תאריך</label>
+                            <input type="date" class="form-input" value={editingDate} onchange={handleEditDateChange} />
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group half">
+                                <label class="form-label">שעת התחלה</label>
+                                <input type="time" class="form-input" value={editingStartTime} onchange={handleEditStartTimeChange} />
+                            </div>
+                            <div class="form-group half">
+                                <label class="form-label">שעת סיום</label>
+                                <input type="time" class="form-input" value={editingEndTime} onchange={handleEditEndTimeChange} />
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label">הערות לעדכון</label>
+                            <input type="text" class="form-input" value={editingDescription} onchange={handleEditDescriptionChange} />
+                        </div>
+
+                        <template if:true={modalError}>
+                            <div class="modal-error">{modalError}</div>
+                        </template>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn btn-secondary" onclick={closeEditModal}>ביטול</button>
+                        <button class="btn btn-primary" onclick={handleSaveEditedEntry} disabled={isSubmitting}>עדכן שעות</button>
+                    </div>
+                </div>
+            </div>
+        </template>
+    </div>
+</template>

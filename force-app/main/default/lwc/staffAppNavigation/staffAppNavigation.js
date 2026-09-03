@@ -12,12 +12,20 @@ export default class StaffAppNavigation extends LightningElement {
         return this.currentPage === 'cruises';
     }
 
+    get isTimeTrackingActive() {
+        return this.currentPage === 'timeTracking';
+    }
+
     get calendarClass() {
         return this.isCalendarActive ? 'nav-item active' : 'nav-item';
     }
 
     get cruisesClass() {
         return this.isCruisesActive ? 'nav-item active' : 'nav-item';
+    }
+
+    get timeTrackingClass() {
+        return this.isTimeTrackingActive ? 'nav-item active' : 'nav-item';
     }
 
     handleNavigate(e) {

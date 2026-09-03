@@ -4,4 +4,5 @@
     <aura:dependency resource="c:staffDayCalendar"/>
     <aura:dependency resource="c:staffCruiseList"/>
     <aura:dependency resource="c:staffAppNavigation"/>
+    <aura:dependency resource="c:staffTimeTracking"/>
 </aura:application>

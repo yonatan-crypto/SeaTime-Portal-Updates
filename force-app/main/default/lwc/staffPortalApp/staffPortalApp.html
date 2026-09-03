@@ -19,6 +19,9 @@
                 <template if:true={showCruises}>
                     <c-staff-cruise-list employee-id={employeeId} onnavigate={handleNavigate}></c-staff-cruise-list>
                 </template>
+                <template if:true={showTimeTracking}>
+                    <c-staff-time-tracking employee-id={employeeId} onnavigate={handleNavigate}></c-staff-time-tracking>
+                </template>
             </div>
         </template>
     </div>

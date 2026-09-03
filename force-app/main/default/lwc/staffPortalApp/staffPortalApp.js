@@ -38,6 +38,10 @@ export default class StaffPortalApp extends LightningElement {
         return this.currentPage === 'cruises';
     }
 
+    get showTimeTracking() {
+        return this.currentPage === 'timeTracking';
+    }
+
     handleAuthenticated(event) {
         this.employeeId = event.detail.employeeId;
         this.employeeName = event.detail.employeeName;

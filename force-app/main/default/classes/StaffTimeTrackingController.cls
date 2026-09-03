@@ -1,0 +1,363 @@
+public without sharing class StaffTimeTrackingController {
+
+    public class MonthlySummary {
+        @AuraEnabled public Decimal totalHours { get; set; }
+        @AuraEnabled public Decimal regularHours { get; set; }
+        @AuraEnabled public Decimal overtime125Hours { get; set; }
+        @AuraEnabled public Decimal overtime150Hours { get; set; }
+        @AuraEnabled public Decimal estimatedSalary { get; set; }
+        @AuraEnabled public Decimal totalTravel { get; set; }
+        @AuraEnabled public Decimal totalBonuses { get; set; }
+        @AuraEnabled public Decimal totalExpenses { get; set; }
+        @AuraEnabled public Integer workDaysCount { get; set; }
+        @AuraEnabled public List<Time_Entry__c> entries { get; set; }
+        @AuraEnabled public Employee__c employeeSettings { get; set; }
+        
+        public MonthlySummary() {
+            totalHours = 0;
+            regularHours = 0;
+            overtime125Hours = 0;
+            overtime150Hours = 0;
+            estimatedSalary = 0;
+            totalTravel = 0;
+            totalBonuses = 0;
+            totalExpenses = 0;
+            workDaysCount = 0;
+            entries = new List<Time_Entry__c>();
+        }
+    }
+
+    // Default Shabbat entry times by month (Tel Aviv / Israel standard)
+    private static final Map<Integer, String> SHABBAT_ENTRY_TIMES = new Map<Integer, String>{
+        1 => '16:40',
+        2 => '17:05',
+        3 => '17:30',
+        4 => '18:50',
+        5 => '19:15',
+        6 => '19:30',
+        7 => '19:30',
+        8 => '19:05',
+        9 => '18:25',
+        10 => '17:45',
+        11 => '16:20',
+        12 => '16:20'
+    };
+
+    @AuraEnabled(cacheable=false)
+    public static MonthlySummary getMonthlyReport(Id employeeId, Integer year, Integer month) {
+        MonthlySummary summary = new MonthlySummary();
+        if (employeeId == null) return summary;
+
+        // 1. Fetch Employee settings
+        List<Employee__c> emps = [
+            SELECT Id, Name, Employee_Type__c, Monthly_Salary__c, Travel_Cost__c, Full_Day_Rate__c, Course_Rate__c,
+                   Job_Percentage__c, Rate_Instruction__c, Rate_Club__c, Rate_Skipper__c, Rate_Maintenance__c,
+                   Rate_Dock_Duty__c, Rate_General__c
+            FROM Employee__c
+            WHERE Id = :employeeId
+            LIMIT 1
+        ];
+        if (emps.isEmpty()) return summary;
+        Employee__c emp = emps[0];
+        summary.employeeSettings = emp;
+
+        // Apply defaults if null
+        if (emp.Travel_Cost__c == null) emp.Travel_Cost__c = 25;
+        if (emp.Full_Day_Rate__c == null) emp.Full_Day_Rate__c = 590;
+        if (emp.Course_Rate__c == null) emp.Course_Rate__c = 700;
+        if (emp.Rate_Instruction__c == null) emp.Rate_Instruction__c = 70;
+        if (emp.Rate_Club__c == null) emp.Rate_Club__c = 70;
+        if (emp.Rate_Skipper__c == null) emp.Rate_Skipper__c = 70;
+        if (emp.Rate_Maintenance__c == null) emp.Rate_Maintenance__c = 50;
+        if (emp.Rate_Dock_Duty__c == null) emp.Rate_Dock_Duty__c = 50;
+        if (emp.Rate_General__c == null) emp.Rate_General__c = 70;
+        if (emp.Monthly_Salary__c == null) emp.Monthly_Salary__c = 0;
+
+        // 2. Date boundaries
+        Date monthStart = Date.newInstance(year, month, 1);
+        Date monthEnd = monthStart.addMonths(1).addDays(-1);
+        DateTime startDateTime = DateTime.newInstance(monthStart, Time.newInstance(0, 0, 0, 0));
+        DateTime endDateTime = DateTime.newInstance(monthEnd.addDays(1), Time.newInstance(0, 0, 0, 0));
+
+        // 3. Query existing Time_Entry__c records
+        List<Time_Entry__c> existingEntries = [
+            SELECT Id, Name, Employee__c, Cruise__c, Work_Date__c, Start_Time__c, End_Time__c,
+                   Total_Hours__c, Regular_Hours__c, Overtime_125_Hours__c, Overtime_150_Hours__c,
+                   Entry_Type__c, Base_Rate__c, Multiplier__c, Total_Payment__c, Description__c,
+                   Status__c, Is_Auto_Generated__c, Is_Manual_Edit__c
+            FROM Time_Entry__c
+            WHERE Employee__c = :employeeId
+              AND Work_Date__c >= :monthStart
+              AND Work_Date__c <= :monthEnd
+        ];
+
+        Set<Id> existingCruiseIds = new Set<Id>();
+        for (Time_Entry__c te : existingEntries) {
+            if (te.Cruise__c != null) {
+                existingCruiseIds.add(te.Cruise__c);
+            }
+        }
+
+        // 4. Query assigned non-canceled cruises for this employee
+        List<Cruise__c> cruises = [
+            SELECT Id, Name, Start_Date__c, End_Date__c, Status__c, Dock_Duty__c,
+                   RecordType.Name, RecordType.DeveloperName, Boat__r.Name
+            FROM Cruise__c
+            WHERE Guide__c = :employeeId
+              AND Start_Date__c >= :startDateTime
+              AND Start_Date__c < :endDateTime
+              AND Status__c != 'Canceled'
+            ORDER BY Start_Date__c ASC
+        ];
+
+        // 5. Auto-generate Time_Entry__c for cruises not yet tracked
+        List<Time_Entry__c> newCruiseEntries = new List<Time_Entry__c>();
+        for (Cruise__c c : cruises) {
+            if (!existingCruiseIds.contains(c.Id)) {
+                Time_Entry__c te = createEntryFromCruise(c, emp, month);
+                newCruiseEntries.add(te);
+            }
+        }
+
+        if (!newCruiseEntries.isEmpty()) {
+            insert newCruiseEntries;
+        }
+
+        // 6. Query all entries for the month sorted chronologically
+        List<Time_Entry__c> allEntries = [
+            SELECT Id, Name, Employee__c, Cruise__c, Work_Date__c, Start_Time__c, End_Time__c,
+                   Total_Hours__c, Regular_Hours__c, Overtime_125_Hours__c, Overtime_150_Hours__c,
+                   Entry_Type__c, Base_Rate__c, Multiplier__c, Total_Payment__c, Description__c,
+                   Status__c, Is_Auto_Generated__c, Is_Manual_Edit__c
+            FROM Time_Entry__c
+            WHERE Employee__c = :employeeId
+              AND Work_Date__c >= :monthStart
+              AND Work_Date__c <= :monthEnd
+            ORDER BY Work_Date__c ASC, Start_Time__c ASC
+        ];
+        summary.entries = allEntries;
+
+        // 7. Calculate aggregate summary
+        Set<Date> uniqueWorkDays = new Set<Date>();
+        Decimal totalWage = 0;
+
+        for (Time_Entry__c te : allEntries) {
+            if (te.Status__c == 'נדחה') continue;
+
+            if (te.Total_Hours__c != null) summary.totalHours += te.Total_Hours__c;
+            if (te.Regular_Hours__c != null) summary.regularHours += te.Regular_Hours__c;
+            if (te.Overtime_125_Hours__c != null) summary.overtime125Hours += te.Overtime_125_Hours__c;
+            if (te.Overtime_150_Hours__c != null) summary.overtime150Hours += te.Overtime_150_Hours__c;
+
+            if (te.Entry_Type__c == 'בונוס' && te.Total_Payment__c != null) {
+                summary.totalBonuses += te.Total_Payment__c;
+            } else if (te.Entry_Type__c == 'החזר הוצאות' && te.Total_Payment__c != null) {
+                summary.totalExpenses += te.Total_Payment__c;
+            } else {
+                if (te.Total_Payment__c != null) totalWage += te.Total_Payment__c;
+                if (te.Work_Date__c != null && te.Total_Hours__c != null && te.Total_Hours__c > 0) {
+                    uniqueWorkDays.add(te.Work_Date__c);
+                }
+            }
+        }
+
+        summary.workDaysCount = uniqueWorkDays.size();
+        summary.totalTravel = summary.workDaysCount * emp.Travel_Cost__c;
+
+        if (emp.Employee_Type__c == 'חודשי' && emp.Monthly_Salary__c > 0) {
+            summary.estimatedSalary = emp.Monthly_Salary__c + summary.totalTravel + summary.totalBonuses + summary.totalExpenses;
+        } else {
+            summary.estimatedSalary = totalWage + summary.totalTravel + summary.totalBonuses + summary.totalExpenses;
+        }
+
+        return summary;
+    }
+
+    private static Time_Entry__c createEntryFromCruise(Cruise__c c, Employee__c emp, Integer month) {
+        Time_Entry__c te = new Time_Entry__c();
+        te.Employee__c = emp.Id;
+        te.Cruise__c = c.Id;
+        te.Is_Auto_Generated__c = true;
+        te.Is_Manual_Edit__c = false;
+        te.Status__c = 'אושר';
+
+        Date workDate = c.Start_Date__c.date();
+        te.Work_Date__c = workDate;
+
+        String startTimeStr = c.Start_Date__c.format('HH:mm');
+        String endTimeStr = c.End_Date__c.format('HH:mm');
+        te.Start_Time__c = startTimeStr;
+        te.End_Time__c = endTimeStr;
+
+        Decimal totalHours = Decimal.valueOf(c.End_Date__c.getTime() - c.Start_Date__c.getTime()) / (1000.0 * 60 * 60);
+        totalHours = totalHours.setScale(2, RoundingMode.HALF_UP);
+        te.Total_Hours__c = totalHours;
+
+        // Determine Entry Type and Base Rate
+        String devName = c.RecordType != null ? c.RecordType.DeveloperName : '';
+        Decimal baseRate = 70;
+        String entryType = 'הפלגה';
+
+        if (c.Dock_Duty__c == true) {
+            entryType = 'תורנות רציף';
+            baseRate = emp.Rate_Dock_Duty__c != null ? emp.Rate_Dock_Duty__c : 50;
+        } else if (devName == 'Course') {
+            entryType = 'קורס';
+            baseRate = emp.Rate_Instruction__c != null ? emp.Rate_Instruction__c : 70;
+        } else if (devName == 'Club') {
+            entryType = 'הפלגה';
+            baseRate = emp.Rate_Club__c != null ? emp.Rate_Club__c : 70;
+        } else if (devName == 'Renting') {
+            entryType = 'הפלגה';
+            baseRate = emp.Rate_Skipper__c != null ? emp.Rate_Skipper__c : 70;
+        } else if (devName == 'Maintenance') {
+            entryType = 'תחזוקה';
+            baseRate = emp.Rate_Maintenance__c != null ? emp.Rate_Maintenance__c : 50;
+        } else if (devName == 'Enriching') {
+            entryType = 'הפלגה';
+            baseRate = emp.Rate_Instruction__c != null ? emp.Rate_Instruction__c : 70;
+        } else {
+            entryType = 'הפלגה';
+            baseRate = emp.Rate_General__c != null ? emp.Rate_General__c : 70;
+        }
+
+        te.Entry_Type__c = entryType;
+        te.Base_Rate__c = baseRate;
+        te.Description__c = (c.Boat__r != null ? c.Boat__r.Name + ' - ' : '') + (c.RecordType != null ? c.RecordType.Name : '');
+
+        // Calculate Multiplier and Payment based on day of week
+        // DateTime.format('u') returns 1 for Monday through 7 for Sunday
+        // In Israel: Sunday=7 or 1 depending on locale, so let's use date difference:
+        Date sundayRef = Date.newInstance(1900, 1, 7); // A known Sunday
+        Integer dayOfWeek = Math.mod(sundayRef.daysBetween(workDate), 7); // 0 = Sunday, 1 = Monday, ..., 5 = Friday, 6 = Saturday
+
+        Decimal multiplier = 1.0;
+        Decimal regHours = 0;
+        Decimal ot125 = 0;
+        Decimal ot150 = 0;
+        Decimal payment = 0;
+
+        if (dayOfWeek == 6) {
+            // Saturday — 150% holiday multiplier
+            multiplier = 1.5;
+            ot150 = totalHours;
+            payment = totalHours * baseRate * 1.5;
+        } else if (dayOfWeek == 5) {
+            // Friday — check Shabbat entry time
+            String entryTimeStr = SHABBAT_ENTRY_TIMES.get(month);
+            if (entryTimeStr == null) entryTimeStr = '18:00';
+
+            List<String> entryParts = entryTimeStr.split(':');
+            Integer entryHour = Integer.valueOf(entryParts[0]);
+            Integer entryMin = Integer.valueOf(entryParts[1]);
+
+            Integer startHour = c.Start_Date__c.hour();
+            Integer startMin = c.Start_Date__c.minute();
+            Integer endHour = c.End_Date__c.hour();
+            Integer endMin = c.End_Date__c.minute();
+
+            Decimal startDec = startHour + (startMin / 60.0);
+            Decimal endDec = endHour + (endMin / 60.0);
+            Decimal entryDec = entryHour + (entryMin / 60.0);
+
+            if (endDec <= entryDec) {
+                // Completely before Shabbat entry
+                regHours = totalHours;
+                multiplier = 1.0;
+                payment = totalHours * baseRate;
+            } else if (startDec >= entryDec) {
+                // Completely after Shabbat entry
+                ot150 = totalHours;
+                multiplier = 1.5;
+                payment = totalHours * baseRate * 1.5;
+            } else {
+                // Spans across Shabbat entry
+                Decimal beforeHours = (entryDec - startDec).setScale(2, RoundingMode.HALF_UP);
+                Decimal afterHours = (endDec - entryDec).setScale(2, RoundingMode.HALF_UP);
+                regHours = beforeHours;
+                ot150 = afterHours;
+                multiplier = 1.25; // average indicative
+                payment = (beforeHours * baseRate) + (afterHours * baseRate * 1.5);
+            }
+        } else {
+            // Sunday through Thursday (regular day)
+            if (totalHours <= 8) {
+                regHours = totalHours;
+                multiplier = 1.0;
+                payment = totalHours * baseRate;
+            } else if (totalHours <= 10) {
+                regHours = 8;
+                ot125 = totalHours - 8;
+                multiplier = 1.05;
+                payment = (8 * baseRate) + (ot125 * baseRate * 1.25);
+            } else {
+                regHours = 8;
+                ot125 = 2;
+                ot150 = totalHours - 10;
+                payment = (8 * baseRate) + (2 * baseRate * 1.25) + (ot150 * baseRate * 1.5);
+            }
+        }
+
+        te.Regular_Hours__c = regHours;
+        te.Overtime_125_Hours__c = ot125;
+        te.Overtime_150_Hours__c = ot150;
+        te.Multiplier__c = multiplier.setScale(2, RoundingMode.HALF_UP);
+        te.Total_Payment__c = payment.setScale(2, RoundingMode.HALF_UP);
+
+        return te;
+    }
+
+    @AuraEnabled
+    public static Time_Entry__c saveTimeEntry(Time_Entry__c entry) {
+        if (entry == null) throw new AuraHandledException('Entry cannot be null');
+
+        // Fetch Employee rates if base rate is 0
+        if (entry.Base_Rate__c == null || entry.Base_Rate__c == 0) {
+            Employee__c emp = [
+                SELECT Id, Full_Day_Rate__c, Course_Rate__c, Rate_Instruction__c, Rate_Club__c,
+                       Rate_Skipper__c, Rate_Maintenance__c, Rate_Dock_Duty__c, Rate_General__c
+                FROM Employee__c
+                WHERE Id = :entry.Employee__c
+                LIMIT 1
+            ];
+
+            if (entry.Entry_Type__c == 'תורנות רציף') entry.Base_Rate__c = emp.Rate_Dock_Duty__c != null ? emp.Rate_Dock_Duty__c : 50;
+            else if (entry.Entry_Type__c == 'תחזוקה') entry.Base_Rate__c = emp.Rate_Maintenance__c != null ? emp.Rate_Maintenance__c : 50;
+            else if (entry.Entry_Type__c == 'חו״ל / יום מלא') entry.Base_Rate__c = emp.Full_Day_Rate__c != null ? emp.Full_Day_Rate__c : 590;
+            else if (entry.Entry_Type__c == 'קורס') entry.Base_Rate__c = emp.Course_Rate__c != null ? emp.Course_Rate__c : 700;
+            else entry.Base_Rate__c = emp.Rate_General__c != null ? emp.Rate_General__c : 70;
+        }
+
+        // If hours provided, recalculate Total_Hours and Payment
+        if (entry.Start_Time__c != null && entry.End_Time__c != null && entry.Start_Time__c.contains(':') && entry.End_Time__c.contains(':')) {
+            List<String> startParts = entry.Start_Time__c.split(':');
+            List<String> endParts = entry.End_Time__c.split(':');
+            Decimal startDec = Integer.valueOf(startParts[0]) + (Integer.valueOf(startParts[1]) / 60.0);
+            Decimal endDec = Integer.valueOf(endParts[0]) + (Integer.valueOf(endParts[1]) / 60.0);
+
+            if (endDec > startDec) {
+                entry.Total_Hours__c = (endDec - startDec).setScale(2, RoundingMode.HALF_UP);
+                if (entry.Multiplier__c == null || entry.Multiplier__c == 0) entry.Multiplier__c = 1.0;
+                entry.Total_Payment__c = (entry.Total_Hours__c * entry.Base_Rate__c * entry.Multiplier__c).setScale(2, RoundingMode.HALF_UP);
+            }
+        } else if (entry.Entry_Type__c == 'חו״ל / יום מלא' || entry.Entry_Type__c == 'קורס') {
+            if (entry.Total_Payment__c == null || entry.Total_Payment__c == 0) {
+                entry.Total_Payment__c = entry.Base_Rate__c;
+            }
+        }
+
+        upsert entry;
+        return entry;
+    }
+
+    @AuraEnabled
+    public static Boolean deleteTimeEntry(Id entryId) {
+        if (entryId == null) return false;
+        List<Time_Entry__c> toDelete = [SELECT Id FROM Time_Entry__c WHERE Id = :entryId LIMIT 1];
+        if (!toDelete.isEmpty()) {
+            delete toDelete;
+            return true;
+        }
+        return false;
+    }
+}
