@@ -129,17 +129,20 @@ public without sharing class StaffTimeTrackingController {
             ORDER BY Start_Date__c ASC
         ];
 
-        // 5. Auto-generate Time_Entry__c for cruises not yet tracked
-        List<Time_Entry__c> newCruiseEntries = new List<Time_Entry__c>();
-        for (Cruise__c c : cruises) {
-            if (!existingCruiseIds.contains(c.Id)) {
-                Time_Entry__c te = createEntryFromCruise(c, emp, month);
-                newCruiseEntries.add(te);
-            }
-        }
+        Boolean isMonthly = (emp.Employee_Type__c == 'חודשי');
 
-        if (!newCruiseEntries.isEmpty()) {
-            insert newCruiseEntries;
+        // 5. Auto-generate Time_Entry__c for cruises not yet tracked (ONLY for hourly employees!)
+        if (!isMonthly) {
+            List<Time_Entry__c> newCruiseEntries = new List<Time_Entry__c>();
+            for (Cruise__c c : cruises) {
+                if (!existingCruiseIds.contains(c.Id)) {
+                    Time_Entry__c te = createEntryFromCruise(c, emp, month);
+                    newCruiseEntries.add(te);
+                }
+            }
+            if (!newCruiseEntries.isEmpty()) {
+                insert newCruiseEntries;
+            }
         }
 
         // 6. Query all entries for the month up to effectiveEndDate sorted chronologically
@@ -156,9 +159,12 @@ public without sharing class StaffTimeTrackingController {
             ORDER BY Work_Date__c ASC, Start_Time__c ASC
         ];
 
-        // Filter out any entries whose cruise has not ended yet
+        // Filter out any entries whose cruise has not ended yet, or auto-generated cruises for full-time staff
         List<Time_Entry__c> performedEntries = new List<Time_Entry__c>();
         for (Time_Entry__c te : allEntries) {
+            if (isMonthly && te.Cruise__c != null && te.Is_Auto_Generated__c == true) {
+                continue; // Cruises and dock duties are covered under base salary for full-time staff
+            }
             if (te.Cruise__c != null && te.Cruise__r.End_Date__c != null && te.Cruise__r.End_Date__c > now) {
                 continue;
             }
@@ -455,7 +461,7 @@ public without sharing class StaffTimeTrackingController {
         List<Time_Entry__c> allEntries = [
             SELECT Id, Employee__c, Cruise__c, Work_Date__c, Start_Time__c, End_Time__c,
                    Base_Rate__c, Multiplier__c, Total_Hours__c, Entry_Type__c, Total_Payment__c,
-                   Description__c, Status__c,
+                   Description__c, Status__c, Is_Auto_Generated__c,
                    Cruise__r.Start_Date__c, Cruise__r.End_Date__c
             FROM Time_Entry__c
             WHERE Work_Date__c >= :monthStart
@@ -505,18 +511,30 @@ public without sharing class StaffTimeTrackingController {
 
         // 4. Process each employee (In-Memory!)
         for (Employee__c emp : emps) {
+            Boolean isMonthly = (emp.Employee_Type__c == 'חודשי');
+
             List<Time_Entry__c> empEntries = entriesByEmp.get(emp.Id);
             if (empEntries == null) empEntries = new List<Time_Entry__c>();
 
-            // Add cruise entries if any were not yet created as Time_Entry__c
-            List<Cruise__c> empCruises = cruisesByEmp.get(emp.Id);
-            if (empCruises != null && !empCruises.isEmpty()) {
-                for (Cruise__c c : empCruises) {
-                    empEntries.add(createEntryFromCruise(c, emp, month));
+            if (!isMonthly) {
+                // For hourly staff: add non-canceled cruises not yet converted to Time_Entry__c
+                List<Cruise__c> empCruises = cruisesByEmp.get(emp.Id);
+                if (empCruises != null && !empCruises.isEmpty()) {
+                    for (Cruise__c c : empCruises) {
+                        empEntries.add(createEntryFromCruise(c, emp, month));
+                    }
                 }
+            } else {
+                // For full-time monthly staff: exclude any auto-generated cruise entries
+                List<Time_Entry__c> manualOnlyEntries = new List<Time_Entry__c>();
+                for (Time_Entry__c te : empEntries) {
+                    if (te.Cruise__c == null || te.Is_Auto_Generated__c == false) {
+                        manualOnlyEntries.add(te);
+                    }
+                }
+                empEntries = manualOnlyEntries;
             }
 
-            Boolean isMonthly = emp.Employee_Type__c == 'חודשי';
             if (empEntries.isEmpty() && !isMonthly) {
                 continue;
             }

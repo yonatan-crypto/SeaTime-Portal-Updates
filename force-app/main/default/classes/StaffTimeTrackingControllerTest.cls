@@ -1,23 +1,8 @@
 @isTest
 private class StaffTimeTrackingControllerTest {
 
-    @isTest
-    static void testMonthlyReportAndEntries() {
-        // Create test Employee
-        Employee__c emp = new Employee__c(
-            Name = 'מדריך בדיקה',
-            Employee_Phone__c = '0501234567',
-            Employee_Email__c = 'instructor@example.com',
-            Employee_Type__c = 'שעתי',
-            Travel_Cost__c = 25,
-            Rate_Instruction__c = 70,
-            Rate_Dock_Duty__c = 50,
-            Rate_Maintenance__c = 50,
-            Rate_General__c = 70
-        );
-        insert emp;
-
-        // Create test Boat
+    @testSetup
+    static void setupCommonData() {
         Boats__c boat = new Boats__c(Name = 'ספינת מבחן', Active__c = true, BoatsSchedulerOrder__c = 1);
         insert boat;
 
@@ -33,6 +18,27 @@ private class StaffTimeTrackingControllerTest {
             type_of_membership__c = 'חבר מועדון כולל פרטיות'
         );
         insert sub;
+    }
+
+    @isTest
+    static void testMonthlyReportAndEntries() {
+        Boats__c boat = [SELECT Id FROM Boats__c LIMIT 1];
+        Account acc = [SELECT Id FROM Account LIMIT 1];
+        Transaction__c sub = [SELECT Id FROM Transaction__c LIMIT 1];
+
+        // Create test Employee
+        Employee__c emp = new Employee__c(
+            Name = 'מדריך בדיקה',
+            Employee_Phone__c = '0501234567',
+            Employee_Email__c = 'instructor@example.com',
+            Employee_Type__c = 'שעתי',
+            Travel_Cost__c = 25,
+            Rate_Instruction__c = 70,
+            Rate_Dock_Duty__c = 50,
+            Rate_Maintenance__c = 50,
+            Rate_General__c = 70
+        );
+        insert emp;
 
         RecordType rt = [SELECT Id FROM RecordType WHERE SObjectType = 'Cruise__c' LIMIT 1];
 
@@ -113,6 +119,11 @@ private class StaffTimeTrackingControllerTest {
 
     @isTest
     static void testMonthlySalaryEmployee() {
+        Boats__c boat = [SELECT Id FROM Boats__c LIMIT 1];
+        Account acc = [SELECT Id FROM Account LIMIT 1];
+        Transaction__c sub = [SELECT Id FROM Transaction__c LIMIT 1];
+        RecordType rt = [SELECT Id FROM RecordType WHERE SObjectType = 'Cruise__c' LIMIT 1];
+
         Employee__c emp = new Employee__c(
             Name = 'עובד חודשי',
             Employee_Phone__c = '0507654321',
@@ -123,11 +134,39 @@ private class StaffTimeTrackingControllerTest {
         );
         insert emp;
 
+        // Create a cruise assigned to this monthly employee
+        Date testDate = Date.newInstance(2025, 6, 12);
+        Cruise__c cMonthly = new Cruise__c(
+            RecordTypeId = rt.Id,
+            Boat__c = boat.Id,
+            Guide__c = emp.Id,
+            AccountName__c = acc.Id,
+            Transaction__c = sub.Id,
+            Start_Date__c = DateTime.newInstance(testDate, Time.newInstance(10, 0, 0, 0)),
+            End_Date__c = DateTime.newInstance(testDate, Time.newInstance(14, 0, 0, 0)),
+            Status__c = 'Approved'
+        );
+        insert cMonthly;
+
+        // Add a manual bonus entry for this monthly employee
+        Time_Entry__c bonusEntry = new Time_Entry__c(
+            Employee__c = emp.Id,
+            Work_Date__c = testDate,
+            Entry_Type__c = 'בונוס',
+            Total_Payment__c = 500,
+            Description__c = 'בונוס חודשי מיוחד',
+            Is_Auto_Generated__c = false
+        );
+        insert bonusEntry;
+
         Test.startTest();
         StaffTimeTrackingController.MonthlySummary summary = StaffTimeTrackingController.getMonthlyReport(
             emp.Id, 2025, 6
         );
         System.assertNotEquals(null, summary);
+        // Cruise should NOT be auto-generated, only the manual bonus entry should be present!
+        System.assertEquals(1, summary.entries.size(), 'Monthly employee should only have manual entries, no auto cruises');
+        System.assertEquals('בונוס', summary.entries[0].Entry_Type__c);
 
         // Test Accountant Report
         List<StaffTimeTrackingController.AccountantReportRow> reportRows = StaffTimeTrackingController.getAccountantMonthlyReport(
