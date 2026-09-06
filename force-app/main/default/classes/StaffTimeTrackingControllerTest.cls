@@ -93,7 +93,7 @@ private class StaffTimeTrackingControllerTest {
             emp.Id, testYear, testMonth
         );
         System.assertNotEquals(null, summary, 'Summary should not be null');
-        System.assertEquals(2, summary.entries.size(), 'Should only include the 2 performed cruises');
+        System.assertEquals(1, summary.entries.size(), 'Should only include the 1 performed regular cruise, dock duty is excluded');
 
         // Test accountant report
         List<StaffTimeTrackingController.AccountantReportRow> accountantRows = StaffTimeTrackingController.getAccountantMonthlyReport(testYear, testMonth);

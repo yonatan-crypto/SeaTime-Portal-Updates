@@ -131,12 +131,13 @@ public without sharing class StaffTimeTrackingController {
               AND Start_Date__c < :effectiveEndDateTime
               AND (End_Date__c <= :now OR (End_Date__c = null AND Start_Date__c <= :now))
               AND Status__c != 'Canceled'
+              AND Dock_Duty__c != true
             ORDER BY Start_Date__c ASC
         ];
 
         Boolean isMonthly = (emp.Employee_Type__c == 'חודשי');
 
-        // 5. Auto-generate Time_Entry__c for cruises not yet tracked (ONLY for hourly employees!)
+        // 5. Auto-generate Time_Entry__c for cruises not yet tracked (ONLY for hourly employees, excluding dock duties!)
         if (!isMonthly) {
             List<Time_Entry__c> newCruiseEntries = new List<Time_Entry__c>();
             for (Cruise__c c : cruises) {
@@ -156,7 +157,7 @@ public without sharing class StaffTimeTrackingController {
                    Total_Hours__c, Regular_Hours__c, Overtime_125_Hours__c, Overtime_150_Hours__c,
                    Entry_Type__c, Base_Rate__c, Multiplier__c, Total_Payment__c, Description__c,
                    Status__c, Is_Auto_Generated__c, Is_Manual_Edit__c,
-                   Cruise__r.Start_Date__c, Cruise__r.End_Date__c
+                   Cruise__r.Start_Date__c, Cruise__r.End_Date__c, Cruise__r.Dock_Duty__c
             FROM Time_Entry__c
             WHERE Employee__c = :employeeId
               AND Work_Date__c >= :monthStart
@@ -164,11 +165,17 @@ public without sharing class StaffTimeTrackingController {
             ORDER BY Work_Date__c ASC, Start_Time__c ASC
         ];
 
-        // Filter out any entries whose cruise has not ended yet, or auto-generated cruises for full-time staff
+        // Filter out any entries whose cruise has not ended yet, auto-generated cruises for full-time staff, or dock duties
         List<Time_Entry__c> performedEntries = new List<Time_Entry__c>();
         for (Time_Entry__c te : allEntries) {
             if (isMonthly && te.Cruise__c != null && te.Is_Auto_Generated__c == true) {
                 continue; // Cruises and dock duties are covered under base salary for full-time staff
+            }
+            if (te.Cruise__c != null && te.Cruise__r.Dock_Duty__c == true) {
+                continue; // Dock duties are excluded from salary calculations
+            }
+            if (te.Entry_Type__c == 'תורנות רציף' && te.Is_Auto_Generated__c == true) {
+                continue;
             }
             if (te.Cruise__c != null && te.Cruise__r.End_Date__c != null && te.Cruise__r.End_Date__c > now) {
                 continue;
@@ -468,7 +475,7 @@ public without sharing class StaffTimeTrackingController {
             SELECT Id, Employee__c, Cruise__c, Work_Date__c, Start_Time__c, End_Time__c,
                    Base_Rate__c, Multiplier__c, Total_Hours__c, Entry_Type__c, Total_Payment__c,
                    Description__c, Status__c, Is_Auto_Generated__c,
-                   Cruise__r.Start_Date__c, Cruise__r.End_Date__c
+                   Cruise__r.Start_Date__c, Cruise__r.End_Date__c, Cruise__r.Dock_Duty__c
             FROM Time_Entry__c
             WHERE Work_Date__c >= :monthStart
               AND Work_Date__c <= :effectiveEndDate
@@ -485,6 +492,13 @@ public without sharing class StaffTimeTrackingController {
             if (te.Cruise__c != null && te.Cruise__r.End_Date__c == null && te.Cruise__r.Start_Date__c > now) {
                 continue;
             }
+            // Exclude auto-generated dock duties
+            if (te.Cruise__c != null && te.Cruise__r.Dock_Duty__c == true) {
+                continue;
+            }
+            if (te.Entry_Type__c == 'תורנות רציף' && te.Is_Auto_Generated__c == true) {
+                continue;
+            }
 
             if (!entriesByEmp.containsKey(te.Employee__c)) {
                 entriesByEmp.put(te.Employee__c, new List<Time_Entry__c>());
@@ -493,7 +507,7 @@ public without sharing class StaffTimeTrackingController {
             if (te.Cruise__c != null) cruisesWithEntries.add(te.Cruise__c);
         }
 
-        // 3. Pre-fetch all non-canceled cruises that have already occurred (performed) in ONE query (Query 3)
+        // 3. Pre-fetch all non-canceled cruises that have already occurred (performed, excluding dock duties) in ONE query (Query 3)
         List<Cruise__c> monthCruises = [
             SELECT Id, Name, Guide__c, Start_Date__c, End_Date__c, Status__c,
                    RecordType.Name, RecordType.DeveloperName, Boat__r.Name, Dock_Duty__c
@@ -503,6 +517,7 @@ public without sharing class StaffTimeTrackingController {
               AND (End_Date__c <= :now OR (End_Date__c = null AND Start_Date__c <= :now))
               AND Status__c != 'Canceled'
               AND Guide__c != null
+              AND Dock_Duty__c != true
         ];
 
         Map<Id, List<Cruise__c>> cruisesByEmp = new Map<Id, List<Cruise__c>>();
