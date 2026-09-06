@@ -114,11 +114,27 @@ public without sharing class StaffTimeTrackingController {
               AND Work_Date__c <= :effectiveEndDate
         ];
 
+        // Deduplicate any existing auto-generated duplicates for the same cruise
+        Map<Id, Time_Entry__c> autoCruiseEntryMap = new Map<Id, Time_Entry__c>();
+        List<Time_Entry__c> duplicatesToDelete = new List<Time_Entry__c>();
         Set<Id> existingCruiseIds = new Set<Id>();
+
         for (Time_Entry__c te : existingEntries) {
             if (te.Cruise__c != null) {
+                if (te.Is_Auto_Generated__c == true) {
+                    if (autoCruiseEntryMap.containsKey(te.Cruise__c)) {
+                        duplicatesToDelete.add(te);
+                        continue;
+                    } else {
+                        autoCruiseEntryMap.put(te.Cruise__c, te);
+                    }
+                }
                 existingCruiseIds.add(te.Cruise__c);
             }
+        }
+
+        if (!duplicatesToDelete.isEmpty()) {
+            delete duplicatesToDelete;
         }
 
         // 4. Query assigned non-canceled cruises for this employee that have already occurred (performed)
@@ -165,8 +181,9 @@ public without sharing class StaffTimeTrackingController {
             ORDER BY Work_Date__c ASC, Start_Time__c ASC
         ];
 
-        // Filter out any entries whose cruise has not ended yet, auto-generated cruises for full-time staff, or dock duties
+        // Filter out any entries whose cruise has not ended yet, auto-generated cruises for full-time staff, dock duties, or duplicates
         List<Time_Entry__c> performedEntries = new List<Time_Entry__c>();
+        Set<Id> seenCruiseIds = new Set<Id>();
         for (Time_Entry__c te : allEntries) {
             if (isMonthly && te.Cruise__c != null && te.Is_Auto_Generated__c == true) {
                 continue; // Cruises and dock duties are covered under base salary for full-time staff
@@ -182,6 +199,12 @@ public without sharing class StaffTimeTrackingController {
             }
             if (te.Cruise__c != null && te.Cruise__r.End_Date__c == null && te.Cruise__r.Start_Date__c > now) {
                 continue;
+            }
+            if (te.Cruise__c != null && te.Is_Auto_Generated__c == true) {
+                if (seenCruiseIds.contains(te.Cruise__c)) {
+                    continue; // Skip duplicate
+                }
+                seenCruiseIds.add(te.Cruise__c);
             }
             performedEntries.add(te);
         }
@@ -484,6 +507,7 @@ public without sharing class StaffTimeTrackingController {
 
         Map<Id, List<Time_Entry__c>> entriesByEmp = new Map<Id, List<Time_Entry__c>>();
         Set<Id> cruisesWithEntries = new Set<Id>();
+        Set<String> seenEmpCruise = new Set<String>();
         for (Time_Entry__c te : allEntries) {
             // Exclude future cruises that have not completed yet
             if (te.Cruise__c != null && te.Cruise__r.End_Date__c != null && te.Cruise__r.End_Date__c > now) {
@@ -498,6 +522,14 @@ public without sharing class StaffTimeTrackingController {
             }
             if (te.Entry_Type__c == 'תורנות רציף' && te.Is_Auto_Generated__c == true) {
                 continue;
+            }
+            // Exclude duplicate auto-generated entries for the same cruise
+            if (te.Cruise__c != null && te.Is_Auto_Generated__c == true) {
+                String key = String.valueOf(te.Employee__c) + '_' + String.valueOf(te.Cruise__c);
+                if (seenEmpCruise.contains(key)) {
+                    continue;
+                }
+                seenEmpCruise.add(key);
             }
 
             if (!entriesByEmp.containsKey(te.Employee__c)) {

@@ -12,16 +12,21 @@ const HEBREW_DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמי
 
 export default class StaffTimeTracking extends LightningElement {
     _employeeId;
+    _isInitialized = false;
+    _isLoadingReport = false;
 
     @api
     get employeeId() {
         return this._employeeId || sessionStorage.getItem('staffEmployeeId');
     }
     set employeeId(val) {
+        const oldVal = this._employeeId;
         this._employeeId = val;
         if (val) {
             sessionStorage.setItem('staffEmployeeId', val);
-            this.loadReport();
+            if (this._isInitialized && oldVal !== val) {
+                this.loadReport();
+            }
         }
     }
 
@@ -65,6 +70,7 @@ export default class StaffTimeTracking extends LightningElement {
     @track editingEntryDesc = '';
 
     connectedCallback() {
+        this._isInitialized = true;
         if (!this._employeeId) {
             this._employeeId = sessionStorage.getItem('staffEmployeeId');
         }
@@ -72,11 +78,12 @@ export default class StaffTimeTracking extends LightningElement {
     }
 
     async loadReport() {
-        if (!this.employeeId) {
-            this.isLoading = false;
+        if (!this.employeeId || this._isLoadingReport) {
+            if (!this.employeeId) this.isLoading = false;
             return;
         }
 
+        this._isLoadingReport = true;
         this.isLoading = true;
         try {
             const data = await getMonthlyReport({
@@ -99,6 +106,7 @@ export default class StaffTimeTracking extends LightningElement {
             console.error('Error loading monthly report:', e);
         } finally {
             this.isLoading = false;
+            this._isLoadingReport = false;
         }
     }
 
